@@ -1,5 +1,6 @@
 <script lang="ts">
 	import './layout.css';
+	import { page } from '$app/state';
 	import favicon from '$lib/assets/favicon.svg';
 	import Topbar from '$lib/components/Topbar.svelte';
 	import { ModeWatcher } from 'mode-watcher';
@@ -9,6 +10,7 @@
 	import type { Snippet } from 'svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+	let isLegalPage = $derived(['/privacy', '/terms'].includes(page.url.pathname.replace(/\/$/, '')));
 </script>
 
 <svelte:head>
@@ -28,5 +30,5 @@
 		  <a href="/terms" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
 		</nav>
 	</footer>
-  <LegalConsent userId={data.user?.id ?? null} />
+  <LegalConsent userId={data.user?.id ?? null} enabled={!isLegalPage} />
 </div>
