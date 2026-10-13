@@ -4,6 +4,7 @@
 	import Topbar from '$lib/components/Topbar.svelte';
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
+	import LegalConsent from '$lib/components/LegalConsent.svelte';
 
 	let { children } = $props();
 </script>
@@ -25,4 +26,5 @@
 		  <a href="/terms" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
 		</nav>
 	</footer>
+  <LegalConsent />
 </div>
