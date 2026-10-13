@@ -5,8 +5,10 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import LegalConsent from '$lib/components/LegalConsent.svelte';
+	import type { LayoutData } from './$types';
+	import type { Snippet } from 'svelte';
 
-	let { children } = $props();
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 </script>
 
 <svelte:head>
@@ -26,5 +28,5 @@
 		  <a href="/terms" class="inline-flex min-h-7 items-center underline underline-offset-4 hover:text-foreground">ข้อกำหนดการใช้งาน</a>
 		</nav>
 	</footer>
-  <LegalConsent />
+  <LegalConsent userId={data.user?.id ?? null} />
 </div>
