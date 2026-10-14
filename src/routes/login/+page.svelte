@@ -24,7 +24,7 @@
 </svelte:head>
 
 <div
-	class="flex min-h-screen w-screen items-center justify-center bg-background font-['Inter','Prompt',sans-serif] antialiased transition-colors duration-300"
+	class="flex min-h-[calc(100dvh-5rem)] w-screen items-center justify-center bg-background font-['Inter','Prompt',sans-serif] antialiased transition-colors duration-300"
 >
 	<!-- Simple Clean Card Container -->
 	<div
