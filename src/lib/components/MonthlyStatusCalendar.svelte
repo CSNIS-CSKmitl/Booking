@@ -103,9 +103,10 @@
 	}
 </script>
 
-<Card.Root
-	class="gap-0 overflow-hidden p-0 border border-border bg-card shadow-xs rounded-xl"
->
+
+<Card.Root class="gap-0 overflow-hidden p-0 border border-border bg-card shadow-xs rounded-xl">
+	<div class="overflow-x-auto overscroll-x-contain">
+		<div class="min-w-[840px]">
 	<!-- Day-of-week header -->
 	<div
 		class="border-border bg-muted/40 grid grid-cols-7 border-b"
@@ -120,9 +121,7 @@
 	</div>
 
 	<!-- Calendar Grid of Cells -->
-	<div
-		class="grid grid-cols-7 divide-x divide-y divide-border/50 border-t border-l border-border/50"
-	>
+	<div class="grid grid-cols-7 divide-x divide-y divide-border/50 border-t border-l border-border/50">
 		{#each calendarDays as day, i (day.dateKey)}
 			<div
 				class={cn(
@@ -168,7 +167,7 @@
 				<!-- Bookings Schedule List -->
 				<div class="flex flex-1 flex-col gap-1.5 overflow-hidden">
 					{#if day.isCurrentMonth && day.bookings.length > 0}
-						{#each day.bookings.slice(0, 3) as booking, bi (bi)}
+						{#each day.bookings.slice(0, 3) as booking (booking.id)}
 							<button
 								type="button"
 								onclick={() => openDetails(booking)}
@@ -203,6 +202,8 @@
 				</div>
 			</div>
 		{/each}
+	</div>
+		</div>
 	</div>
 </Card.Root>
 

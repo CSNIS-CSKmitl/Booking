@@ -15,6 +15,14 @@ const BANGKOK_DATE_FORMAT = new Intl.DateTimeFormat("en-CA", {
 	timeZone: "Asia/Bangkok",
 });
 
+/** Parse PocketBase timestamps consistently as Bangkok time when no offset is stored. */
+export function parseBookingTimestamp(value: string): number {
+	if (!value) return Number.NaN;
+	const normalized = String(value).trim().replace(" ", "T");
+	const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+	return Date.parse(hasTimezone ? normalized : `${normalized}+07:00`);
+}
+
 /** ตรวจสอบ ID ห้องป้องการการเข้าถึงที่ไม่ถูกต้อง */
 export function isValidRoomId(id: string | undefined): id is string {
 	return typeof id === "string" && SAFE_ID_PATTERN.test(id);
@@ -29,9 +37,9 @@ export function escapeFilterValue(value: string): string {
 export function formatToBangkokTime(utcTimeString: string): string {
 	if (!utcTimeString) return "--:--";
 	try {
-		return BANGKOK_TIME_FORMAT.format(
-			new Date(utcTimeString.replace(" ", "T")),
-		);
+		const timestamp = parseBookingTimestamp(utcTimeString);
+		if (!Number.isFinite(timestamp)) return "--:--";
+		return BANGKOK_TIME_FORMAT.format(new Date(timestamp));
 	} catch {
 		return "--:--";
 	}
@@ -40,9 +48,10 @@ export function formatToBangkokTime(utcTimeString: string): string {
 /** แปลงวันเวลา UTC เป็นวันที่ไทยรูปแบบ YYYY-MM-DD */
 export function formatToBangkokDate(utcTimeString: string): string {
 	if (!utcTimeString) return "";
-	return BANGKOK_DATE_FORMAT.format(
-		new Date(utcTimeString.replace(" ", "T")),
-	);
+	const timestamp = parseBookingTimestamp(utcTimeString);
+	return Number.isFinite(timestamp)
+		? BANGKOK_DATE_FORMAT.format(new Date(timestamp))
+		: "";
 }
 
 /** สร้างโครงสร้างตารางปฏิทินแบบ 42 ช่องสำหรับการแสดงผลรายเดือน */
@@ -76,12 +85,9 @@ export function generateMonthGridStructure(
 				if (!b.start_time || !b.end_time) return false;
 
 				try {
-					const bookingStartEpoch = Date.parse(
-						b.start_time.replace(" ", "T"),
-					);
-					const bookingEndEpoch = Date.parse(
-						b.end_time.replace(" ", "T"),
-					);
+					const bookingStartEpoch = parseBookingTimestamp(b.start_time);
+					const bookingEndEpoch = parseBookingTimestamp(b.end_time);
+					if (!Number.isFinite(bookingStartEpoch) || !Number.isFinite(bookingEndEpoch)) return false;
 
 					const isOverlapping =
 						bookingStartEpoch <= cellEndEpoch &&
@@ -97,8 +103,8 @@ export function generateMonthGridStructure(
 			})
 			.sort(
 				(a, b) =>
-					Date.parse(a.start_time.replace(" ", "T")) -
-					Date.parse(b.start_time.replace(" ", "T")),
+				parseBookingTimestamp(a.start_time) -
+					parseBookingTimestamp(b.start_time),
 			)
 			.map((b) => {
 				const roomInfo = roomsList.find((r) => r.id === b.field);
