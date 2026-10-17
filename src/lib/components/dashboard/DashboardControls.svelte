@@ -26,6 +26,8 @@
 		goToCurrentMonth: () => void;
 		handleRoomChange: (val: string | undefined) => void;
 	} = $props();
+
+	const selectedRoom = $derived(rawRooms.find((room) => room.id === selectedRoomId));
 </script>
 
 <div
@@ -50,8 +52,11 @@
 					class="w-[200px] rounded-lg border-border"
 				>
 					<Select.Value placeholder="กำลังโหลด...">
-						{rawRooms.find((r) => r.id === selectedRoomId)?.name ||
-							"กำลังโหลด..."}
+						{#if selectedRoom}
+							{selectedRoom.name}{selectedRoom.location ? ` (${selectedRoom.location})` : ""}
+						{:else}
+							กำลังโหลด...
+						{/if}
 					</Select.Value>
 				</Select.Trigger>
 				<Select.Content class="rounded-lg shadow-lg">
@@ -61,7 +66,7 @@
 							label={room.name}
 							class="rounded-md cursor-pointer"
 						>
-							{room.name}
+							{room.name}{room.location ? ` (${room.location})` : ""}
 						</Select.Item>
 					{/each}
 				</Select.Content>
