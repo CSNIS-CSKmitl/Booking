@@ -49,6 +49,26 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	createRoom: async ({ request, locals }) => {
+		requireSuperadmin(locals.user);
+		const form = await request.formData();
+		const name = String(form.get('name') ?? '').trim();
+		const location = String(form.get('location') ?? '').trim();
+		if (!name) return fail(400, { message: 'กรุณาระบุชื่อห้อง' });
+		if (name.length > 120 || location.length > 160) return fail(400, { message: 'ชื่อห้องหรือสถานที่ยาวเกินกำหนด' });
+		const pb = await adminClient();
+		try {
+			const rooms = await pb.collection('rooms').getFullList({ fields: 'id,name' });
+			if (rooms.some((room) => String(room.name ?? '').trim().toLocaleLowerCase() === name.toLocaleLowerCase())) {
+				return fail(409, { message: 'มีห้องชื่อนี้อยู่แล้ว' });
+			}
+			await pb.collection('rooms').create({ name, location });
+			return { ok: true, message: 'เพิ่มห้องเรียบร้อยแล้ว' };
+		} catch (cause) {
+			console.error('admin create room failed', cause);
+			return fail(400, { message: 'เพิ่มห้องไม่สำเร็จ กรุณาตรวจสอบข้อมูลและสิทธิ์ PocketBase' });
+		} finally { pb.authStore.clear(); }
+	},
 	cancel: async ({ request, locals }) => {
 		requireSuperadmin(locals.user);
 		const id = String((await request.formData()).get('bookingId') ?? '');

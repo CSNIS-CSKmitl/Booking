@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	let { data, form }: { data: any; form: any } = $props();
+	let roomName = $state('');
+	let roomLocation = $state('');
 	const statusText: Record<string, string> = { approved: 'อนุมัติแล้ว', confirmed: 'ยืนยันแล้ว', pending: 'รอดำเนินการ', cancelled: 'ยกเลิกแล้ว' };
 	const statusClass: Record<string, string> = { approved: 'bg-emerald-100 text-emerald-700', confirmed: 'bg-emerald-100 text-emerald-700', pending: 'bg-amber-100 text-amber-700', cancelled: 'bg-slate-100 text-slate-500' };
 	function displayDate(value: string) { return value ? new Date(String(value).replace(' ', 'T')).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : '-'; }
@@ -13,7 +15,16 @@
 		<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-indigo-600">Booking Admin</p><h1 class="mt-1 text-2xl font-bold">จัดการการจองห้อง</h1></div><a class="rounded-lg border border-border px-4 py-2 text-sm" href="/">กลับหน้าหลัก</a></div>
 		{#if form?.message}<div class="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{form.message}</div>{/if}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{#each [['การจองที่ใช้งาน', data.stats.total], ['เดือนนี้', data.stats.month], ['ยกเลิกแล้ว', data.stats.cancelled], ['ห้องทั้งหมด', data.stats.rooms]] as card}<div class="rounded-xl border border-border bg-card p-4"><p class="text-xs text-muted-foreground">{card[0]}</p><p class="mt-2 text-2xl font-bold">{card[1].toLocaleString()}</p></div>{/each}</div>
+		<section class="rounded-xl border border-border bg-card p-4">
+			<div class="mb-3"><h2 class="font-semibold">เพิ่มห้อง</h2><p class="text-xs text-muted-foreground">ห้องใหม่จะแสดงในหน้าจองทันทีหลังบันทึก</p></div>
+			<form method="POST" action="?/createRoom" class="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+				<label class="grid gap-1 text-sm"><span>ชื่อห้อง <span class="text-rose-600">*</span></span><input name="name" bind:value={roomName} required maxlength="120" class="h-10 rounded-lg border border-input bg-background px-3" placeholder="เช่น Lab3" /></label>
+				<label class="grid gap-1 text-sm"><span>สถานที่</span><input name="location" bind:value={roomLocation} maxlength="160" class="h-10 rounded-lg border border-input bg-background px-3" placeholder="เช่น อาคารวิศวกรรม ชั้น 7" /></label>
+				<button type="submit" class="h-10 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">เพิ่มห้อง</button>
+			</form>
+		</section>
 		<div class="rounded-xl border border-border bg-card p-4"><p class="text-sm text-muted-foreground">ห้องที่ถูกจองมากที่สุด</p><p class="mt-1 font-semibold">{data.topRoom || 'ยังไม่มีข้อมูล'}</p></div>
+		<div class="rounded-xl border border-border bg-card p-4"><h2 class="mb-3 font-semibold">ห้องทั้งหมด</h2><div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{#each data.rooms as room}<div class="rounded-lg border border-border/70 px-3 py-2"><p class="font-medium">{room.name}</p><p class="text-xs text-muted-foreground">{room.location || 'ไม่ระบุสถานที่'}</p></div>{:else}<p class="text-sm text-muted-foreground">ยังไม่มีห้อง</p>{/each}</div></div>
 		<div class="overflow-hidden rounded-xl border border-border bg-card"><div class="overflow-x-auto"><table class="w-full min-w-[980px] text-left text-sm"><thead class="border-b border-border bg-muted/40 text-xs text-muted-foreground"><tr><th class="px-4 py-3">หัวข้อ</th><th class="px-4 py-3">ห้อง</th><th class="px-4 py-3">วันเวลา</th><th class="px-4 py-3">ผู้จอง</th><th class="px-4 py-3">สถานะ</th><th class="px-4 py-3 text-right">จัดการ</th></tr></thead><tbody>{#each data.bookings as booking (booking.id)}<tr class="border-b border-border/60 last:border-0"><td class="px-4 py-3 font-medium">{booking.title}</td><td class="px-4 py-3">{booking.roomName}{booking.location ? ` (${booking.location})` : ''}</td><td class="px-4 py-3 whitespace-nowrap text-muted-foreground">{displayDate(booking.start_time)}<br />ถึง {displayDate(booking.end_time)}</td><td class="px-4 py-3">{booking.bookerName || '-'}<br /><span class="text-xs text-muted-foreground">{booking.bookerEmail}</span></td><td class="px-4 py-3"><span class={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[booking.status] ?? 'bg-slate-100 text-slate-600'}`}>{statusText[booking.status] ?? booking.status}</span></td><td class="px-4 py-3 text-right">{#if booking.status !== 'cancelled'}<button class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50" onclick={() => cancel(booking.id)}>ยกเลิก</button>{:else}<span class="text-xs text-muted-foreground">-</span>{/if}</td></tr>{:else}<tr><td colspan="6" class="px-4 py-12 text-center text-muted-foreground">ยังไม่มีข้อมูลการจอง</td></tr>{/each}</tbody></table></div></div>
 	</div>
 </div>
