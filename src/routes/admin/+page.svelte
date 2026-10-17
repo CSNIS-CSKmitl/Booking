@@ -42,7 +42,7 @@
 	const filteredBookings = $derived(filterBookingsByDrilldown(rangeBookings, activeFilter));
 	const effectiveLastUpdated = $derived(refreshedAt || data.lastUpdated || computedStats.generatedAt);
 
-	function displayDate(value: string) {
+	function displayDate(value?: string) {
 		return value
 			? new Date(String(value).replace(' ', 'T')).toLocaleString('th-TH', {
 					dateStyle: 'medium',
@@ -231,16 +231,16 @@
 								</td>
 								<td class="px-4 py-3">
 									<span
-										class={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[booking.status] ?? 'bg-slate-100 text-slate-600'}`}
+										class={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[booking.status ?? ''] ?? 'bg-slate-100 text-slate-600'}`}
 									>
-										{statusText[booking.status] ?? booking.status}
+										{statusText[booking.status ?? ''] ?? booking.status ?? '-'}
 									</span>
 								</td>
 								<td class="px-4 py-3 text-right">
 									{#if booking.status !== 'cancelled'}
 										<button
 											class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
-											onclick={() => cancel(booking.id)}
+											onclick={() => booking.id && cancel(booking.id)}
 										>
 											ยกเลิก
 										</button>
