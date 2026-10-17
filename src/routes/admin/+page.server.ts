@@ -31,6 +31,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 		const active = bookings.filter((b) => b.status !== 'cancelled');
 		const monthBookings = active.filter((b) => String(b.start_time ?? '').startsWith(month));
+		const upcoming = active.filter((b) => new Date(String(b.start_time ?? '').replace(' ', 'T')).getTime() >= now.getTime());
+		const bookers = new Set(active.map((b) => String(b.bookerEmail ?? '').trim().toLowerCase()).filter(Boolean));
 		const roomMap = new Map(rooms.map((r) => [r.id, r]));
 		const roomCounts = new Map<string, number>();
 		for (const b of active) roomCounts.set(b.field, (roomCounts.get(b.field) ?? 0) + 1);
@@ -42,7 +44,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				start_time: b.start_time, end_time: b.end_time, status: b.status,
 				bookerName: b.bookerName ?? '', bookerEmail: b.bookerEmail ?? '', detailLabel: b.detailLabel ?? ''
 			})),
-			stats: { total: active.length, month: monthBookings.length, cancelled: bookings.length - active.length, rooms: rooms.length },
+			stats: { total: active.length, month: monthBookings.length, upcoming: upcoming.length, cancelled: bookings.length - active.length, rooms: rooms.length, bookers: bookers.size },
 			topRoom: [...roomCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ? roomMap.get([...roomCounts.entries()].sort((a, b) => b[1] - a[1])[0][0])?.name ?? '' : ''
 		};
 	} finally { pb.authStore.clear(); }

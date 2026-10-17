@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import BookingStats from '$lib/components/admin/BookingStats.svelte';
 	let { data, form }: { data: any; form: any } = $props();
 	let roomName = $state('');
 	let roomLocation = $state('');
@@ -14,7 +15,7 @@
 	<div class="mx-auto max-w-7xl space-y-6">
 		<div class="flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-indigo-600">Booking Admin</p><h1 class="mt-1 text-2xl font-bold">จัดการการจองห้อง</h1></div><a class="rounded-lg border border-border px-4 py-2 text-sm" href="/">กลับหน้าหลัก</a></div>
 		{#if form?.message}<div class="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{form.message}</div>{/if}
-		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{#each [['การจองที่ใช้งาน', data.stats.total], ['เดือนนี้', data.stats.month], ['ยกเลิกแล้ว', data.stats.cancelled], ['ห้องทั้งหมด', data.stats.rooms]] as card}<div class="rounded-xl border border-border bg-card p-4"><p class="text-xs text-muted-foreground">{card[0]}</p><p class="mt-2 text-2xl font-bold">{card[1].toLocaleString()}</p></div>{/each}</div>
+		<BookingStats stats={data.stats} />
 		<section class="rounded-xl border border-border bg-card p-4">
 			<div class="mb-3"><h2 class="font-semibold">เพิ่มห้อง</h2><p class="text-xs text-muted-foreground">ห้องใหม่จะแสดงในหน้าจองทันทีหลังบันทึก</p></div>
 			<form method="POST" action="?/createRoom" class="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
