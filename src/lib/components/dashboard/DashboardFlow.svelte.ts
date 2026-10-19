@@ -66,7 +66,7 @@ export class DashboardFlow {
 	}
 
 	handleRoomChange(value: string | undefined) {
-		if (value) goto(`/Dashboard/${value}`);
+		if (value) goto(`/dashboard/${value}`);
 	}
 
 	updateClock() {
