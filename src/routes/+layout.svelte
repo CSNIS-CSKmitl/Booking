@@ -6,6 +6,7 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import LegalConsent from '$lib/components/LegalConsent.svelte';
+	import AnnouncementCenter from '$lib/components/AnnouncementCenter.svelte';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 
@@ -19,6 +20,7 @@
 
 <ModeWatcher defaultMode="light" />
 <Toaster />
+<AnnouncementCenter />
 
 <!-- <Topbar /> -->
 <div class="flex min-h-screen flex-col">
