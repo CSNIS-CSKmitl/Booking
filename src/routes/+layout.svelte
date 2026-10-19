@@ -20,10 +20,8 @@
 
 <ModeWatcher defaultMode="light" />
 <Toaster />
-{#if !page.url.pathname.startsWith('/dashboard/')}
-{#if !page.url.pathname.startsWith('/room')}
+{#if !page.url.pathname.startsWith('/dashboard/') && !page.url.pathname.startsWith('/room')}
 	<AnnouncementCenter />
-{/if}
 {/if}
 
 <!-- <Topbar /> -->
