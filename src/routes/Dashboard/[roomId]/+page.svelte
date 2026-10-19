@@ -9,7 +9,7 @@
 	import DashboardHeader from "$lib/components/dashboard/DashboardHeader.svelte";
 	import DashboardControls from "$lib/components/dashboard/DashboardControls.svelte";
 
-	// Import Dashboard Flow Controller
+	// Import dashboard flow controller
 	import { DashboardFlow } from "$lib/components/dashboard/DashboardFlow.svelte";
 
 	const pocketbaseUrl = env.PUBLIC_POCKETBASE_URL || "";
@@ -73,7 +73,7 @@
 </script>
 
 <svelte:head>
-	<title>ตาราง {flow.currentRoomName} | Dashboard</title>
+	<title>ตาราง {flow.currentRoomName} | dashboard</title>
 </svelte:head>
 
 <div

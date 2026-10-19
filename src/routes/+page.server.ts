@@ -16,7 +16,7 @@ export const load: PageServerLoad = async () => {
 
         if (rooms && rooms.length > 0) {
             // Redirect to the first room's dashboard
-            throw redirect(302, `/Dashboard/${rooms[0].id}`);
+            throw redirect(302, `/dashboard/${rooms[0].id}`);
         }
     } catch (err) {
         // SvelteKit redirects are thrown as objects, we must let them pass through

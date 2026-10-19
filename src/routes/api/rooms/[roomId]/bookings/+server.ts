@@ -20,10 +20,10 @@ function escapeFilterValue(value: string): string {
 /**
  * GET /api/rooms/[roomId]/bookings
  *
- * Public endpoint สำหรับ room display (Raspberry Pi kiosk) + Dashboard
+ * Public endpoint สำหรับ room display (Raspberry Pi kiosk) + dashboard
  * - ไม่ต้อง login (Pi ไม่ auth)
  * - ใช้ admin auth ฝั่ง server
- * - ตัด PII ออก (email, booker_id, KMITL user id) → ส่งแค่ข้อมูลที่ Pi/Dashboard ต้องแสดงจริงๆ
+ * - ตัด PII ออก (email, booker_id, KMITL user id) → ส่งแค่ข้อมูลที่ Pi/dashboard ต้องแสดงจริงๆ
  * - filter cancelled ออก
  *
  * Query params:

@@ -87,7 +87,7 @@
 					class="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card hover:bg-accent text-foreground/80 py-3 text-sm font-semibold transition-colors duration-200 shadow-xs text-center"
 				>
 					<LayoutDashboard class="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-					ดูตารางการใช้งานห้อง (Dashboard)
+					ดูตารางการใช้งานห้อง (dashboard)
 				</a>
 
 				<div class="relative flex py-1 items-center">
