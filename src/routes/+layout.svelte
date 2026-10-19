@@ -20,7 +20,9 @@
 
 <ModeWatcher defaultMode="light" />
 <Toaster />
-<AnnouncementCenter />
+{#if !page.url.pathname.startsWith('/dashboard/')}
+	<AnnouncementCenter />
+{/if}
 
 <!-- <Topbar /> -->
 <div class="flex min-h-screen flex-col">
