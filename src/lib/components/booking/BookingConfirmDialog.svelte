@@ -70,9 +70,9 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="sm:max-w-[480px] p-6 bg-card border border-border rounded-2xl shadow-xl animate-in fade-in duration-200"
+		class="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[480px] bg-card border border-border rounded-2xl shadow-xl animate-in fade-in duration-200"
 	>
-		<Dialog.Header class="space-y-2">
+		<Dialog.Header class="shrink-0 space-y-2 border-b border-border p-4 pr-10 sm:p-6 sm:pr-12">
 			<Dialog.Title
 				class="text-lg font-bold text-foreground flex items-center gap-2"
 			>
@@ -88,8 +88,9 @@
 			</Dialog.Description>
 		</Dialog.Header>
 
+		<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:px-6 scrollbar-thin">
 		<div
-			class="my-4 space-y-3.5 border-y border-border py-4 max-h-[180px] overflow-y-auto pr-1 scrollbar-thin"
+			class="space-y-3.5 border-b border-border pb-4 break-words"
 		>
 			<!-- Room -->
 			<div class="flex items-start gap-3">
@@ -230,7 +231,7 @@
 		</div>
 
 		<!-- Guidelines / Agreements Section -->
-		<div class="flex flex-col gap-3 my-4">
+		<div class="mt-4 flex flex-col gap-2">
 			<Card.Root class="p-3 bg-amber-500/20 border-border rounded-xl shadow-none">
 				<p class="text-sm font-semibold text-foreground">
 					หลังเสร็จสิ้นการใช้งาน กรุณาปิดเครื่องเสียง ปิดไฟ และจัดเก้าอี้ให้เรียบร้อย
@@ -239,7 +240,7 @@
 			<Card.Root
 				class="p-3 bg-amber-500/20 border-border rounded-xl shadow-none"
 			>
-				<p class="text-base font-semibold text-foreground">
+				<p class="text-sm font-semibold text-foreground">
 					1.
 					ขอให้ตรวจสอบข้อมูลรายละเอียดการจองให้เรียบร้อยก่อนกดยืนยัน
 				</p>
@@ -248,7 +249,7 @@
 			<Card.Root
 				class="p-3 bg-amber-500/20 border-border rounded-xl shadow-none"
 			>
-				<p class="text-base font-semibold text-foreground mb-1">
+				<p class="text-sm font-semibold text-foreground mb-1">
 					2. กรณีขออนุญาตใช้ห้องปฏิบัติการนอกเวลาราชการ
 				</p>
 				<p class="text-muted-foreground text-xs pl-4 leading-normal">
@@ -259,15 +260,17 @@
 				</p>
 			</Card.Root>
 		</div>
+		</div>
 
 		<!-- Acceptance Checkbox -->
+		<div class="shrink-0 border-t border-border bg-card p-4 sm:px-6">
 		<label
-			class="flex items-start gap-2.5 cursor-pointer mt-4 mb-2 select-none"
+			class="flex items-start gap-2.5 cursor-pointer select-none"
 		>
 			<input
 				type="checkbox"
 				bind:checked={accepted}
-				class="h-4.5 w-4.5 mt-0.5 rounded border-border text-indigo-600 focus:ring-indigo-500 bg-card cursor-pointer"
+				class="h-4.5 w-4.5 shrink-0 mt-0.5 rounded border-border text-indigo-600 focus:ring-indigo-500 bg-card cursor-pointer"
 			/>
 			<span
 				class="text-xs text-muted-foreground font-medium leading-tight"
@@ -276,7 +279,7 @@
 			</span>
 		</label>
 
-		<Dialog.Footer class="flex flex-col-reverse sm:flex-row gap-2 mt-4">
+		<Dialog.Footer class="flex flex-row gap-2 mt-3">
 			<Button
 				variant="outline"
 				onclick={handleClose}
@@ -297,5 +300,6 @@
 				{/if}
 			</Button>
 		</Dialog.Footer>
+		</div>
 	</Dialog.Content>
 </Dialog.Root>
