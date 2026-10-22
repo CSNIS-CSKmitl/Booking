@@ -20,6 +20,7 @@
 		endTime,
 		title,
 		notes = "",
+		advisorName = "",
 		isRecurring = false,
 		recurringUntil = "",
 		recurringDaysText = "",
@@ -36,6 +37,7 @@
 		endTime: string;
 		title: string;
 		notes?: string;
+		advisorName?: string;
 		isRecurring?: boolean;
 		recurringUntil?: string;
 		recurringDaysText?: string;
@@ -198,6 +200,12 @@
 			{/if}
 
 			<!-- Notes -->
+			{#if advisorName.trim()}
+				<div class="text-sm text-foreground break-words">
+					<p class="text-xs text-muted-foreground">อาจารย์ที่ปรึกษา</p>
+					<p>{advisorName}</p>
+				</div>
+			{/if}
 			{#if notes}
 				<div class="flex items-start gap-3">
 					<div
@@ -223,6 +231,11 @@
 
 		<!-- Guidelines / Agreements Section -->
 		<div class="flex flex-col gap-3 my-4">
+			<Card.Root class="p-3 bg-amber-500/20 border-border rounded-xl shadow-none">
+				<p class="text-sm font-semibold text-foreground">
+					หลังเสร็จสิ้นการใช้งาน กรุณาปิดเครื่องเสียง ปิดไฟ และจัดเก้าอี้ให้เรียบร้อย
+				</p>
+			</Card.Root>
 			<Card.Root
 				class="p-3 bg-amber-500/20 border-border rounded-xl shadow-none"
 			>

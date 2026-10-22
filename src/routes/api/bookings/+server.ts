@@ -30,6 +30,7 @@ type CreateBookingBody = {
     endTime: string;    // HH:MM
     title: string;
     notes?: string;
+    advisorName?: string;
     isRecurring?: boolean;
     recurringUntil?: string; // YYYY-MM-DD
     recurringDays?: number[];
@@ -39,6 +40,10 @@ type CreateBookingBody = {
 function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: false; error: string } {
     if (!b || typeof b !== 'object') return { ok: false, error: 'Invalid body' };
     const { roomId, date, startTime, endTime, title, notes, isRecurring, recurringUntil, recurringDays, customBookerName } = b;
+    const { advisorName } = b;
+    if (advisorName !== undefined && (typeof advisorName !== 'string' || advisorName.length > 100)) {
+        return { ok: false, error: 'ชื่ออาจารย์ที่ปรึกษาต้องเป็นข้อความไม่เกิน 100 ตัวอักษร' };
+    }
 
     if (!isValidRoomId(roomId)) return { ok: false, error: 'Invalid roomId' };
     if (!isValidDate(date)) return { ok: false, error: 'Invalid date' };
@@ -88,6 +93,7 @@ function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: fal
             endTime,
             title: title.trim(),
             notes: typeof notes === 'string' ? notes.trim() : '',
+            advisorName: advisorName?.trim() || '',
             isRecurring: !!isRecurring,
             recurringUntil: recurringUntil || '',
             recurringDays: Array.isArray(recurringDays) ? recurringDays : [],
@@ -244,7 +250,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 bookerName,
                 bookerEmail,
                 booker_id: locals.user.id,
-                detailLabel: data.notes || '',
+                detailLabel: [data.advisorName ? `อาจารย์ที่ปรึกษา: ${data.advisorName}` : '', data.notes || ''].filter(Boolean).join('\n'),
                 status: 'approved',
             });
             createdBookings.push(b);

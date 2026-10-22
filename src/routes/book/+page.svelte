@@ -137,6 +137,7 @@
 					<BookingDetailsForm
 						bind:title={flow.title}
 						bind:notes={flow.notes}
+						bind:advisorName={flow.advisorName}
 						bind:customBookerName={flow.customBookerName}
 						{isAdmin}
 					/>
@@ -207,6 +208,7 @@
 		endTime={flow.endTime}
 		title={flow.title}
 		notes={flow.notes}
+		advisorName={flow.advisorName}
 		isRecurring={flow.isRecurring}
 		recurringUntil={flow.recurringUntil}
 		recurringDaysText={flow.recurringDaysText}
