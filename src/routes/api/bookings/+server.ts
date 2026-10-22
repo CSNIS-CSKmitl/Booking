@@ -59,7 +59,7 @@ function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: fal
     if (title.length > 200) {
         return { ok: false, error: 'หัวข้อยาวเกิน 200 ตัวอักษร' };
     }
-    if (notes && typeof notes === 'string' && notes.length > 500) {
+    if (notes !== undefined && (typeof notes !== 'string' || notes.length > 500)) {
         return { ok: false, error: 'รายละเอียดยาวเกิน 500 ตัวอักษร' };
     }
     if (customBookerName && (typeof customBookerName !== 'string' || customBookerName.length > 100)) {
@@ -139,6 +139,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     // ตรวจหาห้องประชุม
+    if (data.advisorName) {
+        const collection = await pb.collections.getOne('bookings');
+        const fields = collection.fields ?? collection.schema ?? [];
+        if (!fields.some((field: { name: string; type: string }) => field.name === 'advisorName' && field.type === 'text')) {
+            throw error(500, 'ฐานข้อมูลยังไม่มีฟิลด์ advisorName กรุณาอัปเดตโครงสร้างฐานข้อมูลก่อน');
+        }
+    }
     try {
         await pb.collection('rooms').getOne(data.roomId);
     } catch {
@@ -250,7 +257,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 bookerName,
                 bookerEmail,
                 booker_id: locals.user.id,
-                detailLabel: [data.advisorName ? `อาจารย์ที่ปรึกษา: ${data.advisorName}` : '', data.notes || ''].filter(Boolean).join('\n'),
+                advisorName: data.advisorName || '',
+                detailLabel: data.notes || '',
                 status: 'approved',
             });
             createdBookings.push(b);

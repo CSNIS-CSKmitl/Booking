@@ -80,6 +80,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
             end_time: r.end_time,
             status: r.status,
             detailLabel: r.detailLabel ?? '',
+            advisorName: r.advisorName ?? '',
             bookerName: r.bookerName ?? '',
             bookerEmail: r.bookerEmail ?? '',
         }));

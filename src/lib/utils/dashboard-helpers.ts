@@ -140,6 +140,7 @@ export function generateMonthGridStructure(
 					bookerName: b.bookerName ?? "",
 					bookerEmail: b.bookerEmail ?? "",
 					detailLabel: b.detailLabel ?? "",
+					advisorName: b.advisorName ?? "",
 				};
 			});
 

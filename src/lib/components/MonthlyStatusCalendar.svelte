@@ -14,6 +14,7 @@
 		bookerName?: string;
 		bookerEmail?: string;
 		detailLabel?: string;
+		advisorName?: string;
 	}
 
 	interface CalendarDay {
@@ -336,6 +337,12 @@
 					{/if}
 				</div>
 
+				{#if selectedBooking.advisorName}
+					<div class="space-y-1 border-t border-border/60 pt-4">
+						<span class="text-xs text-muted-foreground">อาจารย์ที่ปรึกษา</span>
+						<p class="break-words font-medium">{selectedBooking.advisorName}</p>
+					</div>
+				{/if}
 				{#if selectedBooking.detailLabel}
 					<div
 						class="space-y-1 border-t border-border/60 pt-4"
