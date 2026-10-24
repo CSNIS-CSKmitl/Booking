@@ -31,6 +31,7 @@ export interface StatsBookingInput {
 	createdBy?: string;
 	updatedBy?: string;
 	approvedBy?: string;
+	approvedAt?: string;
 }
 
 export interface BookingTrendBucket {

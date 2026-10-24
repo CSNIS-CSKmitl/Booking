@@ -2,7 +2,6 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
-import { writeChangeAudit } from '$lib/server/audit-log';
 
 const PB_URL = env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? '';
 // ✅ เปลี่ยนมาดึงรหัสผ่านแอดมินตรงเพื่อไขระบบ Admin ตัวเก่าแทนเหรียญ Token ดิบ
@@ -267,7 +266,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 status: 'approved',
             });
             createdBookings.push(b);
-            await writeChangeAudit({ actorId: locals.user.id, collection: 'bookings', recordId: b.id, action: 'create/status:approved', after: b });
         }
     } catch (err: any) {
         console.error('❌ PocketBase Create Failed:', JSON.stringify(err.data, null, 2));

@@ -3,7 +3,6 @@ import type { Actions, PageServerLoad } from './$types';
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
 import { computeBookingStats } from '$lib/booking-stats';
-import { writeChangeAudit } from '$lib/server/audit-log';
 
 const SUPERADMIN = '000000000000009';
 
@@ -54,7 +53,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			advisorName: b.advisorName ?? '',
 			createdBy: b.expand?.created_by?.name ?? b.expand?.created_by?.email ?? b.created_by ?? '',
 			updatedBy: b.expand?.updated_by?.name ?? b.expand?.updated_by?.email ?? b.updated_by ?? '',
-			approvedBy: b.expand?.approved_by?.name ?? b.expand?.approved_by?.email ?? b.approved_by ?? ''
+			approvedBy: b.expand?.approved_by?.name ?? b.expand?.approved_by?.email ?? b.approved_by ?? '',
+			approvedAt: b.approved_at ?? ''
 		}));
 		const stats = computeBookingStats({
 			rooms: mappedRooms,
@@ -105,8 +105,7 @@ export const actions: Actions = {
 			) {
 				return fail(409, { message: 'มีห้องชื่อนี้อยู่แล้ว' });
 			}
-			const room = await pb.collection('rooms').create({ name, location, created_by: locals.user!.id, updated_by: locals.user!.id });
-			await writeChangeAudit({ actorId: locals.user!.id, collection: 'rooms', recordId: room.id, action: 'create', after: room });
+			await pb.collection('rooms').create({ name, location, created_by: locals.user!.id, updated_by: locals.user!.id });
 			return { ok: true, message: 'เพิ่มห้องเรียบร้อยแล้ว' };
 		} catch (cause) {
 			console.error('admin create room failed', cause);
@@ -121,9 +120,7 @@ export const actions: Actions = {
 		if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return fail(400, { message: 'รหัสการจองไม่ถูกต้อง' });
 		const pb = await adminClient();
 		try {
-			const before = await pb.collection('bookings').getOne(id);
-			const updated = await pb.collection('bookings').update(id, { status: 'cancelled', updated_by: locals.user!.id });
-			await writeChangeAudit({ actorId: locals.user!.id, collection: 'bookings', recordId: id, action: 'status:cancelled', before, after: updated });
+			await pb.collection('bookings').update(id, { status: 'cancelled', updated_by: locals.user!.id });
 			return { ok: true };
 		} catch {
 			return fail(400, { message: 'ยกเลิกการจองไม่สำเร็จ' });

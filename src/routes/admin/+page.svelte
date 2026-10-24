@@ -244,7 +244,7 @@
 										{statusText[booking.status ?? ''] ?? booking.status ?? '-'}
 									</span>
 									<p class="mt-2 text-xs text-muted-foreground">เพิ่มโดย: {booking.createdBy || '-'}<br />แก้ไขโดย: {booking.updatedBy || '-'}</p>
-									{#if booking.approvedBy}<p class="text-xs text-muted-foreground">อนุมัติโดย: {booking.approvedBy}</p>{/if}
+					{#if booking.approvedBy || booking.approvedAt}<p class="text-xs text-muted-foreground">อนุมัติโดย: {booking.approvedBy || 'ระบบ'}{booking.approvedAt ? ` · ${displayDate(booking.approvedAt)}` : ''}</p>{/if}
 								</td>
 								<td class="px-4 py-3 text-right">
 									{#if booking.status !== 'cancelled'}

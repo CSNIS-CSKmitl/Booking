@@ -1,7 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
-import { writeServiceAudit } from '$lib/server/audit-log';
 
 type AuthUser = {
     id: string;
@@ -149,9 +148,6 @@ export const handle: Handle = async ({ event, resolve }) => {
     if (cached && cached.expires > Date.now()) {
         event.locals.user = cached.user;
         const response = await resolve(event);
-        if (!event.url.pathname.startsWith('/_app') && event.url.pathname !== '/favicon.ico') {
-            void writeServiceAudit(event, { userId: event.locals.user?.id, action: event.request.method === 'GET' ? 'page_view' : 'request', statusCode: response.status });
-        }
         return response;
     }
 
@@ -172,8 +168,5 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
     userCache.set(token, { user, expires: Date.now() + CACHE_TTL_MS });
 	const response = await resolve(event);
-	if (!event.url.pathname.startsWith('/_app') && event.url.pathname !== '/favicon.ico') {
-		void writeServiceAudit(event, { userId: event.locals.user?.id, action: event.request.method === 'GET' ? 'page_view' : 'request', statusCode: response.status });
-	}
 	return response;
 };
