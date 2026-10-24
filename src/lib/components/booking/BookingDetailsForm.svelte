@@ -8,11 +8,13 @@
 	let {
 		title = $bindable(),
 		notes = $bindable(),
+		advisorName = $bindable(),
 		customBookerName = $bindable(),
 		isAdmin,
 	}: {
 		title: string;
 		notes: string;
+		advisorName: string;
 		customBookerName: string;
 		isAdmin: boolean;
 	} = $props();
@@ -76,11 +78,19 @@
 		{/if}
 
 		<div class="flex flex-col gap-1.5">
+			<Label for="book-advisor" class="text-xs font-semibold text-foreground/80">
+				อาจารย์ที่ปรึกษา <span class="text-muted-foreground font-normal">(ไม่บังคับ)</span>
+			</Label>
+			<Input id="book-advisor" type="text" bind:value={advisorName} maxlength={100}
+				placeholder="ชื่ออาจารย์ที่ปรึกษา" class="rounded-lg border-border" />
+		</div>
+
+		<div class="flex flex-col gap-1.5">
 			<Label
 				for="book-notes"
 				class="text-xs font-semibold text-foreground/80"
 			>
-				รายละเอียดอื่น ๆ <span class="text-muted-foreground font-normal">(ไม่บังคับ)</span>
+				หมายเหตุ / สิ่งที่ต้องการเพิ่มเติม <span class="text-muted-foreground font-normal">(ไม่บังคับ)</span>
 			</Label>
 			<Textarea
 				id="book-notes"

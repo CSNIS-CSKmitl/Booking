@@ -4,6 +4,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Separator } from '$lib/components/ui/separator';
 	import ThemeToggle from './ThemeToggle.svelte';
+	import AdminLink from './AdminLink.svelte';
 	import type { AuthUser } from '$lib/types';
 
 	// page.data.user มาจาก +layout.server.ts (อ่านจาก pb_auth cookie)
@@ -28,7 +29,7 @@
 		class="bg-background/60 supports-[backdrop-filter]:bg-background/40 border-border/40 sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-all duration-300"
 	>
 		<div
-			class="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-6 py-3.5 md:px-10"
+			class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-4 py-3.5 md:px-10"
 		>
 			<!-- Left: brand -->
 			<a
@@ -54,7 +55,8 @@
 			</a>
 
 			<!-- Right: actions + user info + logout -->
-			<div class="flex items-center gap-4">
+			<div class="flex flex-wrap items-center gap-2 sm:gap-4">
+				<AdminLink />
 				<Button
 					href="/"
 					variant="outline"

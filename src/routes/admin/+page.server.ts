@@ -50,7 +50,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			status: b.status,
 			bookerName: b.bookerName ?? '',
 			bookerEmail: b.bookerEmail ?? '',
-			detailLabel: b.detailLabel ?? ''
+			detailLabel: b.detailLabel ?? '',
+			advisorName: b.advisorName ?? ''
 		}));
 		const stats = computeBookingStats({
 			rooms: mappedRooms,

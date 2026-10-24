@@ -10,12 +10,14 @@ export interface Booking {
 	bookerEmail?: string;
 	booker_email?: string;
 	detailLabel?: string;
+	advisorName?: string;
 }
 
 export interface BookingItem {
 	id: string;
 	title: string;
 	detailLabel: string;
+	advisorName?: string;
 	startTime: string;
 	startEpoch?: number | null;
 	endTime: string;

@@ -31,6 +31,7 @@ type CreateBookingBody = {
     endTime: string;    // HH:MM
     title: string;
     notes?: string;
+    advisorName?: string;
     isRecurring?: boolean;
     recurringUntil?: string; // YYYY-MM-DD
     recurringDays?: number[];
@@ -40,6 +41,10 @@ type CreateBookingBody = {
 function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: false; error: string } {
     if (!b || typeof b !== 'object') return { ok: false, error: 'Invalid body' };
     const { roomId, date, startTime, endTime, title, notes, isRecurring, recurringUntil, recurringDays, customBookerName } = b;
+    const { advisorName } = b;
+    if (advisorName !== undefined && (typeof advisorName !== 'string' || advisorName.length > 100)) {
+        return { ok: false, error: 'ชื่ออาจารย์ที่ปรึกษาต้องเป็นข้อความไม่เกิน 100 ตัวอักษร' };
+    }
 
     if (!isValidRoomId(roomId)) return { ok: false, error: 'Invalid roomId' };
     if (!isValidDate(date)) return { ok: false, error: 'Invalid date' };
@@ -55,7 +60,7 @@ function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: fal
     if (title.length > 200) {
         return { ok: false, error: 'หัวข้อยาวเกิน 200 ตัวอักษร' };
     }
-    if (notes && typeof notes === 'string' && notes.length > 500) {
+    if (notes !== undefined && (typeof notes !== 'string' || notes.length > 500)) {
         return { ok: false, error: 'รายละเอียดยาวเกิน 500 ตัวอักษร' };
     }
     if (customBookerName && (typeof customBookerName !== 'string' || customBookerName.length > 100)) {
@@ -89,6 +94,7 @@ function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: fal
             endTime,
             title: title.trim(),
             notes: typeof notes === 'string' ? notes.trim() : '',
+            advisorName: advisorName?.trim() || '',
             isRecurring: !!isRecurring,
             recurringUntil: recurringUntil || '',
             recurringDays: Array.isArray(recurringDays) ? recurringDays : [],
@@ -134,6 +140,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     // ตรวจหาห้องประชุม
+    if (data.advisorName) {
+        const collection = await pb.collections.getOne('bookings');
+        const fields = collection.fields ?? collection.schema ?? [];
+        if (!fields.some((field: { name: string; type: string }) => field.name === 'advisorName' && field.type === 'text')) {
+            throw error(500, 'ฐานข้อมูลยังไม่มีฟิลด์ advisorName กรุณาอัปเดตโครงสร้างฐานข้อมูลก่อน');
+        }
+    }
     try {
         await pb.collection('rooms').getOne(data.roomId);
     } catch {
@@ -245,6 +258,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 bookerName,
                 bookerEmail,
                 booker_id: locals.user.id,
+                advisorName: data.advisorName || '',
                 detailLabel: data.notes || '',
                 status: 'approved',
             });

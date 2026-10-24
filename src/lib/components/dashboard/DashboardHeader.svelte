@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AdminLink from '../AdminLink.svelte';
 	let {
 		displayMonthName,
 		currentRoomName,
@@ -30,6 +31,7 @@
 	</div>
 
 	<div class="flex flex-col items-start gap-1 md:items-end">
+		<AdminLink />
 		<div
 			class="font-mono text-xl md:text-2xl font-bold text-foreground leading-none"
 		>

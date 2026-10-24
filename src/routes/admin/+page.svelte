@@ -218,7 +218,15 @@
 					<tbody>
 						{#each filteredBookings as booking (booking.id)}
 							<tr class="border-b border-border/60 last:border-0">
-								<td class="px-4 py-3 font-medium">{booking.title}</td>
+								<td class="px-4 py-3 font-medium">
+									{booking.title}
+									{#if booking.advisorName}
+										<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}</p>
+									{/if}
+									{#if booking.detailLabel}
+										<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-muted-foreground">หมายเหตุ: {booking.detailLabel}</p>
+									{/if}
+								</td>
 								<td class="px-4 py-3">
 									{booking.roomName}{booking.location ? ` (${booking.location})` : ''}
 								</td>

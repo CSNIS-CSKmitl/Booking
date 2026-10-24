@@ -11,6 +11,7 @@ export class BookingFlow {
 	endTime = $state<string>("10:00");
 	title = $state<string>("");
 	notes = $state<string>("");
+	advisorName = $state<string>("");
 	isRecurring = $state(false);
 	recurringUntil = $state<string>("");
 	recurringDays = $state<number[]>([]);
@@ -198,6 +199,7 @@ export class BookingFlow {
 					endTime: this.endTime,
 					title: this.title.trim(),
 					notes: this.notes.trim(),
+					advisorName: this.advisorName.trim(),
 					isRecurring: this.isRecurring,
 					recurringUntil: this.recurringUntil,
 					recurringDays: this.recurringDays,
@@ -215,6 +217,7 @@ export class BookingFlow {
 			this.submitSuccess = true;
 			this.title = "";
 			this.notes = "";
+			this.advisorName = "";
 			this.isRecurring = false;
 			this.recurringUntil = "";
 			this.customBookerName = "";
