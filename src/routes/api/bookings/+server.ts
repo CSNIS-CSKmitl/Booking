@@ -250,6 +250,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
             const endISO = `${date}T${data.endTime}:00+07:00`;
             
             const b = await pb.collection('bookings').create({
+                created_by: locals.user.id,
+                updated_by: locals.user.id,
+                approved_by: locals.user.id,
+                approved_at: new Date().toISOString(),
                 field: data.roomId,
                 date: date,
                 start_time: startISO,

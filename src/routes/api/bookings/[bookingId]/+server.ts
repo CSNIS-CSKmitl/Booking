@@ -43,7 +43,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
             updates.bookerName = String(body.bookerName).trim();
         }
 
-        const updated = await pb.collection('bookings').update(bookingId, updates);
+        const updated = await pb.collection('bookings').update(bookingId, { ...updates, updated_by: locals.user.id });
         await writeChangeAudit({ actorId: locals.user.id, collection: 'bookings', recordId: bookingId, action: 'update', before: booking, after: updated });
         return json({ success: true, booking: updated });
     } catch (err: any) {
@@ -77,7 +77,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
         }
 
         // 3. Update status to 'cancelled' to release slot and retain history
-        const updated = await pb.collection('bookings').update(bookingId, { status: 'cancelled' });
+        const updated = await pb.collection('bookings').update(bookingId, { status: 'cancelled', updated_by: locals.user.id });
         await writeChangeAudit({ actorId: locals.user.id, collection: 'bookings', recordId: bookingId, action: 'status:cancelled', before: booking, after: updated });
         return json({ success: true, booking: updated });
     } catch (err: any) {

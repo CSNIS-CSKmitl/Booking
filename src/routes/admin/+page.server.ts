@@ -102,7 +102,7 @@ export const actions: Actions = {
 			) {
 				return fail(409, { message: 'มีห้องชื่อนี้อยู่แล้ว' });
 			}
-			const room = await pb.collection('rooms').create({ name, location });
+			const room = await pb.collection('rooms').create({ name, location, created_by: locals.user!.id, updated_by: locals.user!.id });
 			await writeChangeAudit({ actorId: locals.user!.id, collection: 'rooms', recordId: room.id, action: 'create', after: room });
 			return { ok: true, message: 'เพิ่มห้องเรียบร้อยแล้ว' };
 		} catch (cause) {
@@ -119,7 +119,7 @@ export const actions: Actions = {
 		const pb = await adminClient();
 		try {
 			const before = await pb.collection('bookings').getOne(id);
-			const updated = await pb.collection('bookings').update(id, { status: 'cancelled' });
+			const updated = await pb.collection('bookings').update(id, { status: 'cancelled', updated_by: locals.user!.id });
 			await writeChangeAudit({ actorId: locals.user!.id, collection: 'bookings', recordId: id, action: 'status:cancelled', before, after: updated });
 			return { ok: true };
 		} catch {
