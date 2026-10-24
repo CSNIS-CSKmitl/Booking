@@ -1,15 +1,18 @@
 import { env } from '$env/dynamic/private';
 import { error, type RequestHandler } from '@sveltejs/kit';
 
-export const fallback: RequestHandler = async ({ request, params, fetch }) => {
+export const fallback: RequestHandler = async ({ request, fetch }) => {
 	const pbUrl = env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? 'http://192.168.15.14:8080';
-	// Construct the target URL on the PocketBase server
-	const targetUrl = `${pbUrl.replace(/\/+$/, '')}/${params.path}${new URL(request.url).search}`;
+	const url = new URL(request.url);
 
-	// Clone the headers from the incoming request, omitting 'host'
+	// Preserve full subpath after /api/db including trailing slashes (e.g. /_/ or /api/...)
+	const subPath = url.pathname.replace(/^\/api\/db/, '') || '/';
+	const targetUrl = `${pbUrl.replace(/\/+$/, '')}${subPath}${url.search}`;
+
+	// Clone the headers from the incoming request, omitting connection/encoding/host
 	const headers = new Headers();
 	for (const [key, value] of request.headers.entries()) {
-		if (key.toLowerCase() !== 'host') {
+		if (!['host', 'accept-encoding', 'content-length', 'connection', 'transfer-encoding'].includes(key.toLowerCase())) {
 			headers.set(key, value);
 		}
 	}
@@ -22,14 +25,34 @@ export const fallback: RequestHandler = async ({ request, params, fetch }) => {
 			method: request.method,
 			headers,
 			body,
+			redirect: 'manual',
 			// @ts-ignore
 			duplex: body ? 'half' : undefined
 		});
 
-		// Return the streamed response back to the client
-		return new Response(res.body, {
+		const responseHeaders = new Headers(res.headers);
+		for (const key of ['content-encoding', 'content-length', 'connection', 'transfer-encoding']) {
+			responseHeaders.delete(key);
+		}
+
+		// Rewrite Location header if PocketBase issues a redirect
+		const location = responseHeaders.get('location');
+		if (location) {
+			const cleanPb = pbUrl.replace(/\/+$/, '');
+			if (location.startsWith(cleanPb)) {
+				responseHeaders.set('location', location.replace(cleanPb, '/api/db'));
+			} else if (location.startsWith('/') && !location.startsWith('/api/db')) {
+				responseHeaders.set('location', `/api/db${location}`);
+			}
+		}
+
+		const isHtml = responseHeaders.get('content-type')?.includes('text/html') ?? false;
+		const responseBody = isHtml ? await res.arrayBuffer() : res.body;
+
+		// Return the response back to the client
+		return new Response(responseBody, {
 			status: res.status,
-			headers: res.headers
+			headers: responseHeaders
 		});
 	} catch (err) {
 		console.error('[PB Proxy Error]:', err);
