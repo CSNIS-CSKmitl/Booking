@@ -52,3 +52,13 @@ export async function writeServiceAudit(event: RequestEvent, input: { userId?: s
     console.warn('[audit] Unable to store booking access log:', error instanceof Error ? error.message : error);
   }
 }
+
+export async function writeChangeAudit(input: { actorId?: string | null; collection: string; recordId: string; action: string; before?: unknown; after?: unknown }) {
+  const pb = await getAdmin();
+  if (!pb) return;
+  try {
+    await pb.collection('audit_logs').create({ service: 'booking', collection: input.collection, record_id: input.recordId, action: input.action, actor: input.actorId || undefined, actor_id: input.actorId || undefined, before: input.before || undefined, after: input.after || undefined });
+  } catch (error) {
+    console.warn('[audit] Unable to store booking change log:', error instanceof Error ? error.message : error);
+  }
+}

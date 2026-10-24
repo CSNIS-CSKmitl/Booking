@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
+import { writeChangeAudit } from '$lib/server/audit-log';
 
 const PB_URL = env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? '';
 const PB_ADMIN_EMAIL = env.PB_ADMIN_EMAIL || '';
@@ -43,6 +44,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
         }
 
         const updated = await pb.collection('bookings').update(bookingId, updates);
+        await writeChangeAudit({ actorId: locals.user.id, collection: 'bookings', recordId: bookingId, action: 'update', before: booking, after: updated });
         return json({ success: true, booking: updated });
     } catch (err: any) {
         console.error('PATCH Booking Error:', err);
@@ -76,6 +78,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
         // 3. Update status to 'cancelled' to release slot and retain history
         const updated = await pb.collection('bookings').update(bookingId, { status: 'cancelled' });
+        await writeChangeAudit({ actorId: locals.user.id, collection: 'bookings', recordId: bookingId, action: 'status:cancelled', before: booking, after: updated });
         return json({ success: true, booking: updated });
     } catch (err: any) {
         console.error('DELETE Booking Error:', err);
