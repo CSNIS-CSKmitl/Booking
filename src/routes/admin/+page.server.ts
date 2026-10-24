@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		pb = await adminClient();
 		const [rooms, bookings] = await Promise.all([
 			pb.collection('rooms').getFullList({ sort: 'name' }),
-			pb.collection('bookings').getFullList({ sort: '-start_time', expand: 'field', batch: 500 })
+			pb.collection('bookings').getFullList({ sort: '-start_time', expand: 'field,created_by,updated_by,approved_by', batch: 500 })
 		]);
 		const roomMap = new Map(rooms.map((r) => [r.id, r]));
 		const mappedRooms = rooms.map((r) => ({
@@ -51,7 +51,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			bookerName: b.bookerName ?? '',
 			bookerEmail: b.bookerEmail ?? '',
 			detailLabel: b.detailLabel ?? '',
-			advisorName: b.advisorName ?? ''
+			advisorName: b.advisorName ?? '',
+			createdBy: b.expand?.created_by?.name ?? b.expand?.created_by?.email ?? b.created_by ?? '',
+			updatedBy: b.expand?.updated_by?.name ?? b.expand?.updated_by?.email ?? b.updated_by ?? '',
+			approvedBy: b.expand?.approved_by?.name ?? b.expand?.approved_by?.email ?? b.approved_by ?? ''
 		}));
 		const stats = computeBookingStats({
 			rooms: mappedRooms,

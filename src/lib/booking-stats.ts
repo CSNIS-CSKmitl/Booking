@@ -28,6 +28,9 @@ export interface StatsBookingInput {
 	detailLabel?: string;
 	bookerEmail?: string;
 	booker_email?: string;
+	createdBy?: string;
+	updatedBy?: string;
+	approvedBy?: string;
 }
 
 export interface BookingTrendBucket {
