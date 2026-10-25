@@ -44,6 +44,10 @@ You can preview the production build with `npm run preview`.
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
 
+## Audit Log และการบันทึกประวัติ
+
+การกระทำสำคัญของผู้ดูแลระบบ (เช่น การอนุมัติการจอง หรือการยกเลิกการจองห้อง) จะถูกบันทึกเข้าสู่คอลเลกชันรวมศูนย์ **`admin_actions`** ใน PocketBase โดยอัตโนมัติ เพื่อให้สามารถตรวจสอบย้อนหลังได้ว่าใครเป็นผู้ตัดสินใจ
+
 ## GitHub Actions deploy
 
 วิธีตั้งค่า SSH, ENV_FILE, PM2 และ deploy อัตโนมัติ: [คู่มือ deploy](https://github.com/CSNIS-CSKmitl/Docs/blob/main/Projects/booking/docs/DEPLOY.md)
