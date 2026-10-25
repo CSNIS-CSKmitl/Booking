@@ -34,6 +34,21 @@ async function getAdmin(): Promise<PocketBase | null> {
   }
 }
 
+/** Records who approved / cancelled a booking in the central admin_actions collection. Never throws. */
+export async function writeAdminAction(input: { actorId: string; action: 'approve' | 'reject' | 'delete' | 'cancel'; targetId: string; targetLabel?: string; metadata?: Record<string, unknown> }) {
+  const pb = await getAdmin();
+  if (!pb) return;
+  try {
+    await pb.collection('admin_actions').create({
+      service: 'booking', action: input.action, actor: input.actorId,
+      target_collection: 'bookings', target_id: input.targetId,
+      target_label: input.targetLabel?.slice(0, 256), metadata: input.metadata ?? {}
+    });
+  } catch (error) {
+    console.warn('[audit] Unable to store admin action:', error instanceof Error ? error.message : error);
+  }
+}
+
 export async function writeServiceAudit(event: RequestEvent, input: { userId?: string | null; action: string; statusCode?: number; metadata?: Record<string, unknown> }) {
   const pb = await getAdmin();
   if (!pb) return;

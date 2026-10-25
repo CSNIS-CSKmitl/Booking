@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
 import { computeBookingStats } from '$lib/booking-stats';
+import { writeAdminAction } from '$lib/server/audit-log';
 
 const SUPERADMIN = '000000000000009';
 
@@ -121,6 +122,7 @@ export const actions: Actions = {
 		const pb = await adminClient();
 		try {
 			await pb.collection('bookings').update(id, { status: 'cancelled', updated_by: locals.user!.id });
+			await writeAdminAction({ actorId: locals.user!.id, action: 'cancel', targetId: id });
 			return { ok: true };
 		} catch {
 			return fail(400, { message: 'ยกเลิกการจองไม่สำเร็จ' });
