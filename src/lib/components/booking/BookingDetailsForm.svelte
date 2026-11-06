@@ -9,6 +9,7 @@
 		title = $bindable(),
 		notes = $bindable(),
 		advisorName = $bindable(),
+		advisorEmail = $bindable(""),
 		customBookerName = $bindable(),
 		isAdmin,
 		teachers = [],
@@ -16,6 +17,7 @@
 		title: string;
 		notes: string;
 		advisorName: string;
+		advisorEmail?: string;
 		customBookerName: string;
 		isAdmin: boolean;
 		teachers?: { id: string; name: string; email?: string }[];
@@ -101,7 +103,8 @@
 						onclick={() => {
 							isCustomAdvisor = !isCustomAdvisor;
 							if (!isCustomAdvisor && !teachers.some((t) => t.name === advisorName)) {
-								advisorName = '';
+								advisorName = "";
+								advisorEmail = "";
 							}
 						}}
 						class="text-[11px] text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium cursor-pointer"
@@ -123,6 +126,8 @@
 							advisorName = '';
 						} else {
 							advisorName = val;
+							const matched = teachers.find((t) => t.name === val);
+							advisorEmail = matched?.email || "";
 						}
 					}}
 				>

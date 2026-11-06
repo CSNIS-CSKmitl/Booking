@@ -1,4 +1,5 @@
-import { isBookingAdmin } from '$lib/roles';
+import { isBookingAdmin, getUserRoles } from '$lib/roles';
+import { resolveBookingRecipients, sendBookingNotificationEmail } from '$lib/server/notification';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PocketBase from 'pocketbase';
@@ -33,6 +34,7 @@ type CreateBookingBody = {
     title: string;
     notes?: string;
     advisorName?: string;
+    advisorEmail?: string;
     isRecurring?: boolean;
     recurringUntil?: string; // YYYY-MM-DD
     recurringDays?: number[];
@@ -42,7 +44,10 @@ type CreateBookingBody = {
 function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: false; error: string } {
     if (!b || typeof b !== 'object') return { ok: false, error: 'Invalid body' };
     const { roomId, date, startTime, endTime, title, notes, isRecurring, recurringUntil, recurringDays, customBookerName } = b;
-    const { advisorName } = b;
+    const { advisorName, advisorEmail } = b;
+    if (advisorEmail !== undefined && (typeof advisorEmail !== 'string' || advisorEmail.length > 100)) {
+        return { ok: false, error: 'อีเมลอาจารย์ที่ปรึกษาไม่ถูกต้อง' };
+    }
     if (advisorName !== undefined && (typeof advisorName !== 'string' || advisorName.length > 100)) {
         return { ok: false, error: 'ชื่ออาจารย์ที่ปรึกษาต้องเป็นข้อความไม่เกิน 100 ตัวอักษร' };
     }
@@ -96,6 +101,7 @@ function validateBody(b: any): { ok: true; data: CreateBookingBody } | { ok: fal
             title: title.trim(),
             notes: typeof notes === 'string' ? notes.trim() : '',
             advisorName: advisorName?.trim() || '',
+            advisorEmail: advisorEmail?.trim() || '',
             isRecurring: !!isRecurring,
             recurringUntil: recurringUntil || '',
             recurringDays: Array.isArray(recurringDays) ? recurringDays : [],
@@ -271,6 +277,55 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         }
         for (const b of createdBookings) {
             await writeAdminAction({ actorId: locals.user.id, action: 'approve', targetId: b.id, targetLabel: data.title, metadata: { auto: true, date: b.date } });
+        }
+
+        // Notification routing & email sending
+        try {
+            let roomName = data.roomId;
+            try {
+                const roomRecord = await pb.collection('rooms').getOne(data.roomId);
+                roomName = roomRecord.name || roomRecord.title || data.roomId;
+            } catch {
+                // fallback to roomId
+            }
+
+            let resolvedAdvisorEmail = data.advisorEmail;
+            if (!resolvedAdvisorEmail && data.advisorName) {
+                try {
+                    const matchedTeachers = await pb.collection('users').getFullList({
+                        filter: `name = "${data.advisorName.replace(/"/g, '\\"')}"`,
+                        requestKey: null
+                    });
+                    if (matchedTeachers.length > 0 && matchedTeachers[0].email) {
+                        resolvedAdvisorEmail = matchedTeachers[0].email;
+                    }
+                } catch {
+                    // ignore
+                }
+            }
+
+            const recipients = await resolveBookingRecipients(pb, locals.user, resolvedAdvisorEmail);
+            const bookerRoles = getUserRoles(locals.user);
+            const bookerRole = bookerRoles.length > 0 ? bookerRoles.join(', ') : 'user';
+
+            if (recipients.length > 0) {
+                void sendBookingNotificationEmail(recipients, {
+                    roomName,
+                    date: data.date,
+                    startTime: data.startTime,
+                    endTime: data.endTime,
+                    title: data.title,
+                    notes: data.notes,
+                    bookerName,
+                    bookerEmail: locals.user.email,
+                    bookerRole,
+                    advisorName: data.advisorName,
+                    advisorEmail: resolvedAdvisorEmail,
+                    datesCount: dates.length
+                }).catch((e) => console.error('[Notification] sendBookingNotificationEmail error:', e));
+            }
+        } catch (notifyErr) {
+            console.error('[Notification] Error preparing notification:', notifyErr);
         }
     } catch (err: any) {
         console.error('❌ PocketBase Create Failed:', JSON.stringify(err.data, null, 2));

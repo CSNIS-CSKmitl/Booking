@@ -140,8 +140,10 @@
 						bind:title={flow.title}
 						bind:notes={flow.notes}
 						bind:advisorName={flow.advisorName}
+						bind:advisorEmail={flow.advisorEmail}
 						bind:customBookerName={flow.customBookerName}
 						{isAdmin}
+						{teachers}
 					/>
 
 					<!-- Notifications & Validation alerts -->
