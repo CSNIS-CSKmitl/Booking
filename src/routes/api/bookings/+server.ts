@@ -1,4 +1,4 @@
-import { isBookingAdmin, getUserRoles } from '$lib/roles';
+import { isBookingAdmin, getUserRoles, formatDisplayRole } from '$lib/roles';
 import { resolveBookingRecipients, sendBookingNotificationEmail } from '$lib/server/notification';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
@@ -306,7 +306,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
             const recipients = await resolveBookingRecipients(pb, locals.user, resolvedAdvisorEmail);
             const bookerRoles = getUserRoles(locals.user);
-            const bookerRole = bookerRoles.length > 0 ? bookerRoles.join(', ') : 'user';
+            const bookerRole = formatDisplayRole(locals.user);
 
             if (recipients.length > 0) {
                 void sendBookingNotificationEmail(recipients, {

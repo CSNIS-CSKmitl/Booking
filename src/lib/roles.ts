@@ -4,18 +4,18 @@ export function getUserRoles(record: any): string[] {
 
 	if (Array.isArray(record.roles)) {
 		for (const r of record.roles) {
-			if (typeof r === 'string') roles.add(r.toLowerCase().trim());
+			if (typeof r === 'string' && !isRawRoleId(r)) roles.add(r.toLowerCase().trim());
 		}
 	}
 
 	const expanded = record.expand?.user_type;
 	if (Array.isArray(expanded)) {
 		for (const item of expanded) {
-			if (item?.type) roles.add(item.type.toLowerCase().trim());
+			if (item?.type && !isRawRoleId(item.type)) roles.add(item.type.toLowerCase().trim());
 			if (item?.id) addIdRole(item.id, roles);
 		}
 	} else if (expanded && typeof expanded === 'object') {
-		if (expanded.type) roles.add(expanded.type.toLowerCase().trim());
+		if (expanded.type && !isRawRoleId(expanded.type)) roles.add(expanded.type.toLowerCase().trim());
 		if (expanded.id) addIdRole(expanded.id, roles);
 	}
 
@@ -23,16 +23,20 @@ export function getUserRoles(record: any): string[] {
 	if (Array.isArray(ut)) {
 		for (const item of ut) {
 			if (typeof item === 'string') {
-				roles.add(item.toLowerCase().trim());
+				if (!isRawRoleId(item)) roles.add(item.toLowerCase().trim());
 				addIdRole(item, roles);
 			}
 		}
 	} else if (typeof ut === 'string') {
-		roles.add(ut.toLowerCase().trim());
+		if (!isRawRoleId(ut)) roles.add(ut.toLowerCase().trim());
 		addIdRole(ut, roles);
 	}
 
 	return Array.from(roles);
+}
+
+function isRawRoleId(str: string): boolean {
+	return typeof str === 'string' && /^0{10,}\d+$/.test(str.trim());
 }
 
 function addIdRole(id: string, set: Set<string>) {
@@ -47,6 +51,21 @@ function addIdRole(id: string, set: Set<string>) {
 	if (id === '000000000000007') { set.add('stuff'); set.add('staff'); }
 	if (id === '000000000000008') { set.add('guest'); set.add('guests'); }
 	if (id === '0000000000000010' || id === '000000000000010') { set.add('super_admin'); set.add('superadmin'); }
+}
+
+/**
+ * แปลง Role ทางเทคนิคให้เป็นข้อความภาษาไทยที่อ่านง่ายสำหรับแสดงในอีเมลและหน้าจอ
+ */
+export function formatDisplayRole(userOrRoles: any): string {
+	const roleList = Array.isArray(userOrRoles) ? userOrRoles : getUserRoles(userOrRoles);
+	const cleanRoles = roleList.filter((r) => !isRawRoleId(r));
+	if (cleanRoles.some((r) => ['super_admin', 'superadmin', 'admin'].includes(r))) return 'ผู้ดูแลระบบ';
+	if (cleanRoles.includes('head')) return 'หัวหน้าภาควิชา';
+	if (cleanRoles.some((r) => ['teacher', 'teachers'].includes(r))) return 'อาจารย์';
+	if (cleanRoles.some((r) => ['staff', 'stuff'].includes(r))) return 'เจ้าหน้าที่';
+	if (cleanRoles.some((r) => ['student', 'students'].includes(r))) return 'นักศึกษา';
+	if (cleanRoles.some((r) => ['guest', 'guests'].includes(r))) return 'บุคคลภายนอก';
+	return cleanRoles.length > 0 ? cleanRoles[0] : 'นักศึกษา';
 }
 
 /**
