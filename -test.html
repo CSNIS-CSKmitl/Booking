@@ -1,140 +1,207 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Room Booking dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        body {
-            font-family: 'Prompt', sans-serif;
-        }
+      body {
+        font-family: "Prompt", sans-serif;
+      }
     </style>
-</head>
-<body class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden flex flex-col p-6">
-
-    <header class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6">
-        <div class="flex items-center space-x-4">
-            <div class="bg-indigo-600 p-2.5 rounded-xl font-bold text-xl tracking-wider">ROOM</div>
-            <div>
-                <h1 class="text-3xl font-bold text-white">CONFERENCE ROOM 01</h1>
-                <p class="text-sm text-slate-400">อาคารอเนกประสงค์ ชั้น 3</p>
-            </div>
+  </head>
+  <body
+    class="bg-slate-900 text-slate-100 h-screen w-screen overflow-hidden flex flex-col p-6"
+  >
+    <header
+      class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6"
+    >
+      <div class="flex items-center space-x-4">
+        <div
+          class="bg-indigo-600 p-2.5 rounded-xl font-bold text-xl tracking-wider"
+        >
+          ROOM
         </div>
-        <div class="text-right">
-            <div id="live-clock" class="text-4xl font-bold text-indigo-400 tracking-wider">00:00:00</div>
-            <div id="live-date" class="text-sm text-slate-400 mt-1">วันจันทร์ที่ 1 มิถุนายน 2026</div>
+        <div>
+          <h1 class="text-3xl font-bold text-white">CONFERENCE ROOM 01</h1>
+          <p class="text-sm text-slate-400">อาคารอเนกประสงค์ ชั้น 3</p>
         </div>
+      </div>
+      <div class="text-right">
+        <div
+          id="live-clock"
+          class="text-4xl font-bold text-indigo-400 tracking-wider"
+        >
+          00:00:00
+        </div>
+        <div id="live-date" class="text-sm text-slate-400 mt-1">
+          วันจันทร์ที่ 1 มิถุนายน 2026
+        </div>
+      </div>
     </header>
 
     <main class="flex-1 flex gap-6 min-h-0">
-        
-        <section class="w-7/12 flex flex-col gap-6">
-            <div class="bg-red-950/40 border border-red-500/30 rounded-2xl p-6 flex flex-col justify-between flex-1 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-2 h-full bg-red-500"></div>
-                
-                <div>
-                    <div class="inline-flex items-center gap-2 bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-semibold mb-4">
-                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                        กำลังใช้งาน (OCCUPIED)
-                    </div>
-                    <h2 class="text-4xl font-bold text-white mb-2" id="current-title">Marketing Team Meeting</h2>
-                    <p class="text-xl text-slate-300" id="current-time">13:00 - 15:00 น.</p>
-                </div>
+      <section class="w-7/12 flex flex-col gap-6">
+        <div
+          class="bg-red-950/40 border border-red-500/30 rounded-2xl p-6 flex flex-col justify-between flex-1 relative overflow-hidden"
+        >
+          <div class="absolute top-0 left-0 w-2 h-full bg-red-500"></div>
 
-                <div class="mt-4">
-                    <div class="flex justify-between text-xs text-slate-400 mb-1">
-                        <span>เริ่มแล้ว 65 นาที</span>
-                        <span class="text-red-400 font-medium">เหลืออีก 25 นาที</span>
-                    </div>
-                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                        <div class="bg-red-500 h-full rounded-full" style="width: 70%"></div>
-                    </div>
-                </div>
+          <div>
+            <div
+              class="inline-flex items-center gap-2 bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-semibold mb-4"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-red-500 animate-pulse"
+              ></span>
+              กำลังใช้งาน (OCCUPIED)
             </div>
+            <h2 class="text-4xl font-bold text-white mb-2" id="current-title">
+              Marketing Team Meeting
+            </h2>
+            <p class="text-xl text-slate-300" id="current-time">
+              13:00 - 15:00 น.
+            </p>
+          </div>
 
-            <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 h-2/5 flex flex-col">
-                <h3 class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-3">คิวถัดไปวันนี้ (UPCOMING)</h3>
-                <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="upcoming-list">
-                    <div class="flex justify-between items-center p-3 bg-slate-800 rounded-xl border border-slate-700/50">
-                        <div>
-                            <p class="font-semibold text-white text-base">Dev Sprint Planning</p>
-                            <p class="text-xs text-slate-400">ผู้จอง: Born Techasit</p>
-                        </div>
-                        <span class="bg-slate-700 text-indigo-300 px-3 py-1 rounded-lg text-sm font-medium">15:30 - 16:30</span>
-                    </div>
-                    <div class="flex justify-between items-center p-3 bg-slate-800 rounded-xl border border-slate-700/50">
-                        <div>
-                            <p class="font-semibold text-white text-base">HR Interview (Candidate A)</p>
-                            <p class="text-xs text-slate-400">ผู้จอง: P'Aom HR</p>
-                        </div>
-                        <span class="bg-slate-700 text-slate-300 px-3 py-1 rounded-lg text-sm font-medium">17:00 - 18:00</span>
-                    </div>
-                </div>
+          <div class="mt-4">
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+              <span>เริ่มแล้ว 65 นาที</span>
+              <span class="text-red-400 font-medium">เหลืออีก 25 นาที</span>
             </div>
-        </section>
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div
+                class="bg-red-500 h-full rounded-full"
+                style="width: 70%"
+              ></div>
+            </div>
+          </div>
+        </div>
 
-        <section class="w-5/12 flex flex-col gap-6">
-            <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center flex-1">
-                <div class="mb-4">
-                    <h3 class="text-xl font-bold text-white mb-1">ต้องการจองห้องนี้?</h3>
-                    <p class="text-xs text-slate-400">สแกน QR Code ด้านล่างเพื่อเข้าสู่ระบบจองผ่าน Google Form / Web</p>
-                </div>
-                
-                <div class="bg-white p-4 rounded-xl shadow-lg inline-block transition-transform hover:scale-105" id="qrcode"></div>
-                
-                <p class="text-xs text-indigo-400 font-semibold tracking-wide mt-4 bg-indigo-950/50 px-3 py-1 rounded-full border border-indigo-500/20">
-                    SCAN TO BOOK NOW
+        <div
+          class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 h-2/5 flex flex-col"
+        >
+          <h3
+            class="text-sm font-semibold tracking-wider text-slate-400 uppercase mb-3"
+          >
+            คิวถัดไปวันนี้ (UPCOMING)
+          </h3>
+          <div class="flex-1 overflow-y-auto space-y-3 pr-2" id="upcoming-list">
+            <div
+              class="flex justify-between items-center p-3 bg-slate-800 rounded-xl border border-slate-700/50"
+            >
+              <div>
+                <p class="font-semibold text-white text-base">
+                  Dev Sprint Planning
                 </p>
+                <p class="text-xs text-slate-400">ผู้จอง: Born Techasit</p>
+              </div>
+              <span
+                class="bg-slate-700 text-indigo-300 px-3 py-1 rounded-lg text-sm font-medium"
+                >15:30 - 16:30</span
+              >
             </div>
-
-            <div class="bg-gradient-to-br from-indigo-950/30 to-slate-900 border border-indigo-500/20 rounded-2xl p-4 flex gap-3 items-start">
-                <span class="text-2xl">💡</span>
-                <div>
-                    <h4 class="text-sm font-semibold text-indigo-300">ข้อแนะนำการใช้งาน</h4>
-                    <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">หากประชุมเสร็จก่อนกำหนด กรุณากดคืนห้องในระบบ เพื่อเปิดโอกาสให้เพื่อนๆ ร่วมทีมคนอื่นสามารถเข้าใช้งานต่อได้ครับ</p>
-                </div>
+            <div
+              class="flex justify-between items-center p-3 bg-slate-800 rounded-xl border border-slate-700/50"
+            >
+              <div>
+                <p class="font-semibold text-white text-base">
+                  HR Interview (Candidate A)
+                </p>
+                <p class="text-xs text-slate-400">ผู้จอง: P'Aom HR</p>
+              </div>
+              <span
+                class="bg-slate-700 text-slate-300 px-3 py-1 rounded-lg text-sm font-medium"
+                >17:00 - 18:00</span
+              >
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
 
+      <section class="w-5/12 flex flex-col gap-6">
+        <div
+          class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center flex-1"
+        >
+          <div class="mb-4">
+            <h3 class="text-xl font-bold text-white mb-1">
+              ต้องการจองห้องนี้?
+            </h3>
+            <p class="text-xs text-slate-400">
+              สแกน QR Code ด้านล่างเพื่อเข้าสู่ระบบจองผ่าน Google Form / Web
+            </p>
+          </div>
+
+          <div
+            class="bg-white p-4 rounded-xl shadow-lg inline-block transition-transform hover:scale-105"
+            id="qrcode"
+          ></div>
+
+          <p
+            class="text-xs text-indigo-400 font-semibold tracking-wide mt-4 bg-indigo-950/50 px-3 py-1 rounded-full border border-indigo-500/20"
+          >
+            SCAN TO BOOK NOW
+          </p>
+        </div>
+
+        <div
+          class="bg-gradient-to-br from-indigo-950/30 to-slate-900 border border-indigo-500/20 rounded-2xl p-4 flex gap-3 items-start"
+        >
+          <span class="text-2xl">💡</span>
+          <div>
+            <h4 class="text-sm font-semibold text-indigo-300">
+              ข้อแนะนำการใช้งาน
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5 leading-relaxed">
+              หากประชุมเสร็จก่อนกำหนด กรุณากดคืนห้องในระบบ
+              เพื่อเปิดโอกาสให้เพื่อนๆ ร่วมทีมคนอื่นสามารถเข้าใช้งานต่อได้ครับ
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script>
-        // 1. ระบบนาฬิกา Real-time ทำงานทุกๆ 1 วินาที
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('th-TH', { hour12: false });
-            document.getElementById('live-clock').innerText = timeString;
-        }
-        setInterval(updateClock, 1000);
-        updateClock(); // เรียกทำงานทันทีไม่ต้องรอ 1 วินาทีแรก
+      // 1. ระบบนาฬิกา Real-time ทำงานทุกๆ 1 วินาที
+      function updateClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("th-TH", { hour12: false });
+        document.getElementById("live-clock").innerText = timeString;
+      }
+      setInterval(updateClock, 1000);
+      updateClock(); // เรียกทำงานทันทีไม่ต้องรอ 1 วินาทีแรก
 
-        // 2. ระบบสร้าง QR Code อัตโนมัติ
-        // ให้ใส่ URL ปลายทางที่ต้องการให้คนสแกนแล้วเด้งไป (เช่น ลิงก์ Google Form หรือเว็บของคุณ)
-        const bookingUrl = "https://docs.google.com/spreadsheets/d/your-id-here/edit"; 
-        
-        new QRCode(document.getElementById("qrcode"), {
-            text: bookingUrl,
-            width: 180,
-            height: 180,
-            colorDark : "#0f172a", // สีตัว QR (Slate 900)
-            colorLight : "#ffffff", // สีพื้นหลัง QR
-            correctLevel : QRCode.CorrectLevel.H
-        });
+      // 2. ระบบสร้าง QR Code อัตโนมัติ
+      // ให้ใส่ URL ปลายทางที่ต้องการให้คนสแกนแล้วเด้งไป (เช่น ลิงก์ Google Form หรือเว็บของคุณ)
+      const bookingUrl =
+        "https://docs.google.com/spreadsheets/d/your-id-here/edit";
 
-        // 3. ฟังก์ชันจำลองการดึงข้อมูลใหม่ (Auto Fetch Simulation)
-        // ในอนาคตคุณสามารถเขียนฟังก์ชัน fetch() ข้อมูลจาก Google Sheets API ตรงนี้ได้เลย
-        function fetchBookingData() {
-            console.log("กำลังอัพเดทข้อมูลตารางจองจาก API... (เรียลไทม์)");
-            // ตัวอย่าง: ถ้าดึงข้อมูลสำเร็จ ก็นำค่าไปเปลี่ยนที่ document.getElementById('current-title').innerText
-        }
-        // ตั้งให้ดึงข้อมูลใหม่ทุกๆ 30 วินาที
-        setInterval(fetchBookingData, 30000); 
+      new QRCode(document.getElementById("qrcode"), {
+        text: bookingUrl,
+        width: 180,
+        height: 180,
+        colorDark: "#0f172a", // สีตัว QR (Slate 900)
+        colorLight: "#ffffff", // สีพื้นหลัง QR
+        correctLevel: QRCode.CorrectLevel.H,
+      });
+
+      // 3. ฟังก์ชันจำลองการดึงข้อมูลใหม่ (Auto Fetch Simulation)
+      // ในอนาคตคุณสามารถเขียนฟังก์ชัน fetch() ข้อมูลจาก Google Sheets API ตรงนี้ได้เลย
+      function fetchBookingData() {
+        console.log("กำลังอัพเดทข้อมูลตารางจองจาก API... (เรียลไทม์)");
+        // ตัวอย่าง: ถ้าดึงข้อมูลสำเร็จ ก็นำค่าไปเปลี่ยนที่ document.getElementById('current-title').innerText
+      }
+      // ตั้งให้ดึงข้อมูลใหม่ทุกๆ 30 วินาที
+      setInterval(fetchBookingData, 30000);
     </script>
-</body>
+  </body>
 </html>

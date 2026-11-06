@@ -1,69 +1,110 @@
-import PocketBase from 'pocketbase';
-import { env } from '$env/dynamic/private';
-import type { RequestEvent } from '@sveltejs/kit';
-import { resolveClientIp } from './client-ip.mjs';
+import PocketBase from "pocketbase";
+import { env } from "$env/dynamic/private";
+import type { RequestEvent } from "@sveltejs/kit";
+import { resolveClientIp } from "./client-ip.mjs";
 
 let admin: PocketBase | null = null;
 let authenticatedAt = 0;
 const AUTH_TTL_MS = 5 * 60 * 1000;
 
 function sourceIp(event: RequestEvent): string {
-  let remoteAddress = '';
-  try { remoteAddress = event.getClientAddress(); } catch { /* unavailable in some adapters */ }
+  let remoteAddress = "";
+  try {
+    remoteAddress = event.getClientAddress();
+  } catch {
+    /* unavailable in some adapters */
+  }
   return resolveClientIp({
     headers: Object.fromEntries(event.request.headers.entries()),
     remoteAddress,
-    trustProxy: env.TRUST_PROXY === 'true'
+    trustProxy: env.TRUST_PROXY === "true",
   });
 }
 async function getAdmin(): Promise<PocketBase | null> {
-  const url = env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? '';
+  const url = env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? "";
   if (!url || !env.PB_ADMIN_EMAIL || !env.PB_ADMIN_PASSWORD) return null;
-  if (admin?.authStore.isValid && Date.now() - authenticatedAt < AUTH_TTL_MS) return admin;
+  if (admin?.authStore.isValid && Date.now() - authenticatedAt < AUTH_TTL_MS)
+    return admin;
   const client = new PocketBase(url);
   client.autoCancellation(false);
   try {
-    await client.admins.authWithPassword(env.PB_ADMIN_EMAIL, env.PB_ADMIN_PASSWORD);
+    await client.admins.authWithPassword(
+      env.PB_ADMIN_EMAIL,
+      env.PB_ADMIN_PASSWORD,
+    );
     admin = client;
     authenticatedAt = Date.now();
     return client;
   } catch (error) {
-    console.warn('[audit] PocketBase admin auth failed:', error instanceof Error ? error.message : error);
+    console.warn(
+      "[audit] PocketBase admin auth failed:",
+      error instanceof Error ? error.message : error,
+    );
     admin = null;
     return null;
   }
 }
 
 /** Records who approved / cancelled a booking in the central admin_actions collection. Never throws. */
-export async function writeAdminAction(input: { actorId: string; action: 'approve' | 'reject' | 'delete' | 'cancel' | 'update'; targetId: string; targetLabel?: string; metadata?: Record<string, unknown> }) {
+export async function writeAdminAction(input: {
+  actorId: string;
+  action: "approve" | "reject" | "delete" | "cancel" | "update";
+  targetId: string;
+  targetLabel?: string;
+  metadata?: Record<string, unknown>;
+}) {
   const pb = await getAdmin();
   if (!pb) return;
   try {
-    await pb.collection('admin_actions').create({
-      service: 'booking', action: input.action, actor: input.actorId,
-      target_collection: 'bookings', target_id: input.targetId,
-      target_label: input.targetLabel?.slice(0, 256), metadata: input.metadata ?? {}
+    await pb.collection("admin_actions").create({
+      service: "booking",
+      action: input.action,
+      actor: input.actorId,
+      target_collection: "bookings",
+      target_id: input.targetId,
+      target_label: input.targetLabel?.slice(0, 256),
+      metadata: input.metadata ?? {},
     });
   } catch (error) {
-    console.warn('[audit] Unable to store admin action:', error instanceof Error ? error.message : error);
+    console.warn(
+      "[audit] Unable to store admin action:",
+      error instanceof Error ? error.message : error,
+    );
   }
 }
 
-export async function writeServiceAudit(event: RequestEvent, input: { userId?: string | null; action: string; statusCode?: number; metadata?: Record<string, unknown> }) {
+export async function writeServiceAudit(
+  event: RequestEvent,
+  input: {
+    userId?: string | null;
+    action: string;
+    statusCode?: number;
+    metadata?: Record<string, unknown>;
+  },
+) {
   const pb = await getAdmin();
   if (!pb) return;
   try {
     const clientIp = sourceIp(event);
-    await pb.collection('service_access_logs').create({
-      service: 'booking', user: input.userId || undefined,
-      source_ip: clientIp, method: event.request.method,
-      path: event.url.pathname, action: input.action, status_code: input.statusCode,
-      user_agent: event.request.headers.get('user-agent') || undefined,
-      request_id: event.request.headers.get('x-request-id') || undefined,
-      metadata: { ...(input.metadata || {}), ip_version: clientIp ? (clientIp.includes(':') ? 6 : 4) : null }
+    await pb.collection("service_access_logs").create({
+      service: "booking",
+      user: input.userId || undefined,
+      source_ip: clientIp,
+      method: event.request.method,
+      path: event.url.pathname,
+      action: input.action,
+      status_code: input.statusCode,
+      user_agent: event.request.headers.get("user-agent") || undefined,
+      request_id: event.request.headers.get("x-request-id") || undefined,
+      metadata: {
+        ...(input.metadata || {}),
+        ip_version: clientIp ? (clientIp.includes(":") ? 6 : 4) : null,
+      },
     });
   } catch (error) {
-    console.warn('[audit] Unable to store booking access log:', error instanceof Error ? error.message : error);
+    console.warn(
+      "[audit] Unable to store booking access log:",
+      error instanceof Error ? error.message : error,
+    );
   }
 }
-
