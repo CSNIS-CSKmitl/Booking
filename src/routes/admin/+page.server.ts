@@ -92,6 +92,46 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+		updateRoom: async ({ request, locals }) => {
+		requireSuperadmin(locals.user);
+		const form = await request.formData();
+		const roomId = String(form.get('roomId') ?? '').trim();
+		if (!/^[a-zA-Z0-9_-]{1,64}$/.test(roomId)) return fail(400, { message: 'รหัสห้องไม่ถูกต้อง' });
+
+		const name = String(form.get('name') ?? '').trim();
+		const location = String(form.get('location') ?? '').trim();
+		const seatsVal = form.get('seats');
+		const seats = seatsVal !== null && seatsVal !== '' && !isNaN(Number(seatsVal)) ? Math.max(0, parseInt(String(seatsVal), 10)) : null;
+		const image_url = String(form.get('image_url') ?? '').trim();
+
+		if (!name) return fail(400, { message: 'กรุณาระบุชื่อห้อง' });
+		if (name.length > 120 || location.length > 160)
+			return fail(400, { message: 'ชื่อห้องหรือสถานที่ยาวเกินกำหนด' });
+
+		const pb = await adminClient();
+		try {
+			await pb.collection('rooms').update(roomId, {
+				name,
+				location,
+				seats,
+				image_url: image_url || null,
+				updated_by: locals.user!.id
+			});
+			await writeAdminAction({
+				actorId: locals.user!.id,
+				action: 'update',
+				targetId: roomId,
+				targetLabel: name,
+				metadata: { seats, location, image_url }
+			});
+			return { ok: true, message: `แก้ไขข้อมูลห้อง "${name}" เรียบร้อยแล้ว` };
+		} catch (cause) {
+			console.error('admin update room failed', cause);
+			return fail(400, { message: 'แก้ไขห้องไม่สำเร็จ กรุณาตรวจสอบข้อมูลและสิทธิ์' });
+		} finally {
+			pb.authStore.clear();
+		}
+	},
 	deleteRoom: async ({ request, locals }) => {
 		requireSuperadmin(locals.user);
 		const form = await request.formData();

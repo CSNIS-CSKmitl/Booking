@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
-	import { Trash2 } from '@lucide/svelte';
+	import { Trash2, Pencil } from '@lucide/svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import {
 		computeBookingStats,
 		filterBookingsByDrilldown,
@@ -63,6 +64,52 @@
 	}
 
 	
+	
+	let editingRoom = $state<{
+		id: string;
+		name: string;
+		location: string;
+		seats: number | null;
+		image_url: string;
+	} | null>(null);
+	let editDialogOpen = $state(false);
+	let editSaving = $state(false);
+
+	function openEditRoom(room: any) {
+		editingRoom = {
+			id: room.id,
+			name: room.name ?? '',
+			location: room.location ?? '',
+			seats: room.seats ?? null,
+			image_url: room.image_url ?? ''
+		};
+		editDialogOpen = true;
+	}
+
+	async function handleSaveRoom(e: Event) {
+		e.preventDefault();
+		if (!editingRoom) return;
+		editSaving = true;
+		try {
+			const body = new FormData();
+			body.set('roomId', editingRoom.id);
+			body.set('name', editingRoom.name);
+			body.set('location', editingRoom.location);
+			if (editingRoom.seats !== null && editingRoom.seats !== undefined && !isNaN(Number(editingRoom.seats))) {
+				body.set('seats', String(editingRoom.seats));
+			} else {
+				body.set('seats', '');
+			}
+			body.set('image_url', editingRoom.image_url);
+
+			await fetch('?/updateRoom', { method: 'POST', body });
+			editDialogOpen = false;
+			editingRoom = null;
+			await handleRefresh();
+		} finally {
+			editSaving = false;
+		}
+	}
 	async function handleDeleteRoom(id: string, name: string) {
 		if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "${name}"?\nการกระทำนี้จะลบห้องออกจากระบบและไม่สามารถย้อนกลับได้`)) return;
 		const body = new FormData();
@@ -187,14 +234,30 @@
 								</p>
 							</div>
 						</button>
-						<button
-							type="button"
-							class="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-							title="ลบห้อง {room.name}"
-							onclick={() => handleDeleteRoom(room.id, room.name)}
-						>
-							<Trash2 class="h-4 w-4" />
-						</button>
+						<div class="flex items-center gap-1 shrink-0">
+							<button
+								type="button"
+								class="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors cursor-pointer"
+								title="แก้ไขห้องและจำนวนที่นั่ง {room.name}"
+								onclick={(e) => {
+									e.stopPropagation();
+									openEditRoom(room);
+								}}
+							>
+								<Pencil class="h-3.5 w-3.5" />
+							</button>
+							<button
+								type="button"
+								class="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+								title="ลบห้อง {room.name}"
+								onclick={(e) => {
+									e.stopPropagation();
+									handleDeleteRoom(room.id, room.name);
+								}}
+							>
+								<Trash2 class="h-3.5 w-3.5" />
+							</button>
+						</div>
 					</div>
 				{:else}
 					<p class="text-sm text-muted-foreground col-span-full py-4 text-center">ยังไม่มีห้องในระบบ</p>
@@ -326,4 +389,91 @@
 			onRefresh={handleRefresh}
 		/>
 	</div>
+
+<Dialog.Root bind:open={editDialogOpen}>
+	<Dialog.Content class="sm:max-w-[480px] bg-card border border-border rounded-2xl p-6 shadow-xl">
+		<Dialog.Header class="space-y-1">
+			<Dialog.Title class="text-lg font-bold flex items-center gap-2">
+				<div class="h-8 w-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+					<Pencil class="h-4 w-4" />
+				</div>
+				แก้ไขข้อมูลห้อง / ที่นั่ง
+			</Dialog.Title>
+			<Dialog.Description class="text-xs text-muted-foreground">
+				ปรับปรุงชื่อห้อง สถานที่ จำนวนที่นั่ง หรือ URL รูปภาพ
+			</Dialog.Description>
+		</Dialog.Header>
+
+		{#if editingRoom}
+			<form onsubmit={handleSaveRoom} class="mt-4 space-y-4">
+				<label class="grid gap-1.5 text-sm font-medium">
+					<span>ชื่อห้อง <span class="text-rose-600">*</span></span>
+					<input
+						bind:value={editingRoom.name}
+						required
+						maxlength="120"
+						class="h-10 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600"
+						placeholder="เช่น Lab3"
+					/>
+				</label>
+
+				<label class="grid gap-1.5 text-sm font-medium">
+					<span>สถานที่</span>
+					<input
+						bind:value={editingRoom.location}
+						maxlength="160"
+						class="h-10 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600"
+						placeholder="เช่น อาคารวิศวกรรม ชั้น 7"
+					/>
+				</label>
+
+				<label class="grid gap-1.5 text-sm font-medium">
+					<span>จำนวนที่นั่ง (ที่นั่ง) <span class="text-indigo-600 font-bold">*</span></span>
+					<input
+						type="number"
+						min="0"
+						bind:value={editingRoom.seats}
+						class="h-10 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600"
+						placeholder="เช่น 40"
+					/>
+				</label>
+
+				<label class="grid gap-1.5 text-sm font-medium">
+					<span>URL รูปภาพห้อง</span>
+					<input
+						type="url"
+						bind:value={editingRoom.image_url}
+						class="h-10 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600"
+						placeholder="https://..."
+					/>
+				</label>
+
+				{#if editingRoom.image_url}
+					<div class="rounded-lg border border-border p-2 bg-muted/30 flex items-center gap-3">
+						<img src={editingRoom.image_url} alt="Room preview" class="h-12 w-16 object-cover rounded border border-border" />
+						<span class="text-xs text-muted-foreground truncate flex-1">ภาพตัวอย่างห้อง</span>
+					</div>
+				{/if}
+
+				<div class="mt-6 flex justify-end gap-2 pt-3 border-t border-border">
+					<button
+						type="button"
+						class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted cursor-pointer"
+						onclick={() => (editDialogOpen = false)}
+						disabled={editSaving}
+					>
+						ยกเลิก
+					</button>
+					<button
+						type="submit"
+						class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 cursor-pointer disabled:opacity-50"
+						disabled={editSaving}
+					>
+						{editSaving ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+					</button>
+				</div>
+			</form>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
 </div>

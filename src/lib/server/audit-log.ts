@@ -35,7 +35,7 @@ async function getAdmin(): Promise<PocketBase | null> {
 }
 
 /** Records who approved / cancelled a booking in the central admin_actions collection. Never throws. */
-export async function writeAdminAction(input: { actorId: string; action: 'approve' | 'reject' | 'delete' | 'cancel'; targetId: string; targetLabel?: string; metadata?: Record<string, unknown> }) {
+export async function writeAdminAction(input: { actorId: string; action: 'approve' | 'reject' | 'delete' | 'cancel' | 'update'; targetId: string; targetLabel?: string; metadata?: Record<string, unknown> }) {
   const pb = await getAdmin();
   if (!pb) return;
   try {
