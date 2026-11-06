@@ -2,21 +2,8 @@ import nodemailer from 'nodemailer';
 import { env } from '$env/dynamic/private';
 import { getUserRoles } from '$lib/roles';
 import type PocketBase from 'pocketbase';
-
-export interface BookingNotificationDetails {
-	roomName: string;
-	date: string;
-	startTime: string;
-	endTime: string;
-	title: string;
-	notes?: string;
-	bookerName: string;
-	bookerEmail: string;
-	bookerRole: string;
-	advisorName?: string;
-	advisorEmail?: string;
-	datesCount?: number;
-}
+import type { BookingNotificationDetails } from '$lib/types';
+export type { BookingNotificationDetails };
 
 function getTransporter() {
 	const host = env.SMTP_HOST;
