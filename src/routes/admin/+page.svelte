@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
+	import { Trash2 } from '@lucide/svelte';
 	import {
 		computeBookingStats,
 		filterBookingsByDrilldown,
@@ -61,6 +62,17 @@
 		}
 	}
 
+	
+	async function handleDeleteRoom(id: string, name: string) {
+		if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "${name}"?\nการกระทำนี้จะลบห้องออกจากระบบและไม่สามารถย้อนกลับได้`)) return;
+		const body = new FormData();
+		body.set('roomId', id);
+		await fetch('?/deleteRoom', { method: 'POST', body });
+		if (activeFilter === `room:${id}`) {
+			activeFilter = 'all';
+		}
+		await handleRefresh();
+	}
 	async function cancel(id: string) {
 		if (!confirm('ยืนยันยกเลิกการจองนี้หรือไม่')) return;
 		const body = new FormData();
@@ -145,30 +157,47 @@
 		</section>
 
 		<div class="rounded-xl border border-border bg-card p-4">
-			<h2 class="mb-3 font-semibold">ห้องทั้งหมด (คลิกเพื่อกรองตารางการจอง)</h2>
-			<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+			<div class="flex items-center justify-between mb-3">
+				<div>
+					<h2 class="font-semibold">ห้องทั้งหมด ({data.rooms.length})</h2>
+					<p class="text-xs text-muted-foreground">คลิกที่ห้องเพื่อกรองตารางการจอง หรือกดไอคอนถังขยะเพื่อลบห้อง</p>
+				</div>
+			</div>
+			<div class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
 				{#each data.rooms as room (room.id)}
 					{@const roomFilter = `room:${room.id}` as const}
-					<button
-						type="button"
-						class="flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition {activeFilter === roomFilter
+					<div
+						class="group relative flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-all {activeFilter === roomFilter
 							? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20'
-							: 'border-border/70 hover:border-indigo-300'}"
-						onclick={() => (activeFilter = activeFilter === roomFilter ? 'all' : roomFilter)}
+							: 'border-border/70 hover:border-indigo-300 bg-card'}"
 					>
-						{#if room.image_url}
-							<img src={room.image_url} alt="" class="h-10 w-10 shrink-0 rounded object-cover border border-border" />
-						{/if}
-						<div class="min-w-0 flex-1">
-							<p class="font-medium truncate">{room.name}</p>
-							<p class="text-xs text-muted-foreground truncate">
-								{room.location || 'ไม่ระบุสถานที่'}
-								{#if room.seats} • {room.seats} ที่นั่ง{/if}
-							</p>
-						</div>
-					</button>
+						<button
+							type="button"
+							class="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer"
+							onclick={() => (activeFilter = activeFilter === roomFilter ? 'all' : roomFilter)}
+						>
+							{#if room.image_url}
+								<img src={room.image_url} alt="" class="h-10 w-10 shrink-0 rounded-lg object-cover border border-border" />
+							{/if}
+							<div class="min-w-0 flex-1">
+								<p class="font-semibold text-sm truncate">{room.name}</p>
+								<p class="text-xs text-muted-foreground truncate">
+									{room.location || 'ไม่ระบุสถานที่'}
+									{#if room.seats} • {room.seats} ที่นั่ง{/if}
+								</p>
+							</div>
+						</button>
+						<button
+							type="button"
+							class="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+							title="ลบห้อง {room.name}"
+							onclick={() => handleDeleteRoom(room.id, room.name)}
+						>
+							<Trash2 class="h-4 w-4" />
+						</button>
+					</div>
 				{:else}
-					<p class="text-sm text-muted-foreground">ยังไม่มีห้อง</p>
+					<p class="text-sm text-muted-foreground col-span-full py-4 text-center">ยังไม่มีห้องในระบบ</p>
 				{/each}
 			</div>
 		</div>

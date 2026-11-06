@@ -92,6 +92,25 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	deleteRoom: async ({ request, locals }) => {
+		requireSuperadmin(locals.user);
+		const form = await request.formData();
+		const roomId = String(form.get('roomId') ?? '').trim();
+		if (!/^[a-zA-Z0-9_-]{1,64}$/.test(roomId)) return fail(400, { message: 'รหัสห้องไม่ถูกต้อง' });
+		const pb = await adminClient();
+		try {
+			const room = await pb.collection('rooms').getOne(roomId);
+			await pb.collection('rooms').delete(roomId);
+			await writeAdminAction({ actorId: locals.user!.id, action: 'delete', targetId: roomId, targetLabel: room.name });
+			return { ok: true, message: `ลบห้อง "${room.name}" เรียบร้อยแล้ว` };
+		} catch (cause) {
+			console.error('admin delete room failed', cause);
+			return fail(400, { message: 'ลบห้องไม่สำเร็จ กรุณาตรวจสอบข้อมูลและสิทธิ์' });
+		} finally {
+			pb.authStore.clear();
+		}
+	},
+
 	createRoom: async ({ request, locals }) => {
 		requireSuperadmin(locals.user);
 		const form = await request.formData();
