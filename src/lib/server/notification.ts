@@ -151,7 +151,11 @@ export async function sendBookingNotificationEmail(
 				</tr>
 				<tr>
 					<td style="padding: 6px 0; font-weight: bold;">ผู้จอง:</td>
-					<td style="padding: 6px 0;">${details.bookerName} (${details.bookerEmail}) [${details.bookerRole}]</td>
+					<td style="padding: 6px 0;">${details.bookerName} (${details.bookerEmail})</td>
+				</tr>
+				<tr>
+					<td style="padding: 6px 0; font-weight: bold;">สถานะผู้จอง:</td>
+					<td style="padding: 6px 0; color: #4f46e5; font-weight: 600;">${details.bookerRole}</td>
 				</tr>
 				${
 					details.advisorName
