@@ -85,19 +85,6 @@
 			<div class="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{form.message}</div>
 		{/if}
 
-		<BookingStats
-			stats={computedStats}
-			{selectedRange}
-			{activeFilter}
-			loading={refreshing}
-			error={data.statsError ?? ''}
-			lastUpdated={effectiveLastUpdated}
-			isRealtime={false}
-			onRangeChange={(range) => (selectedRange = range)}
-			onDrilldown={(filter) => (activeFilter = filter)}
-			onRefresh={handleRefresh}
-		/>
-
 		<section class="rounded-xl border border-border bg-card p-4">
 			<div class="mb-3">
 				<h2 class="font-semibold">เพิ่มห้อง</h2>
@@ -297,5 +284,17 @@
 				</table>
 			</div>
 		</div>
+			<BookingStats
+			stats={computedStats}
+			{selectedRange}
+			{activeFilter}
+			loading={refreshing}
+			error={data.statsError ?? ''}
+			lastUpdated={effectiveLastUpdated}
+			isRealtime={false}
+			onRangeChange={(range) => (selectedRange = range)}
+			onDrilldown={(filter) => (activeFilter = filter)}
+			onRefresh={handleRefresh}
+		/>
 	</div>
 </div>
