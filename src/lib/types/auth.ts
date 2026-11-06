@@ -1,12 +1,6 @@
-export interface AuthUser {
-	id: string;
-	email: string;
-	name: string;
-	username?: string;
-	user_type?: string | string[];
-	roles?: string[];
-	isAdmin?: boolean;
-}
+import type { User } from './user';
+
+export type AuthUser = User;
 
 export interface KmitlTokenResponse {
 	data?: {
