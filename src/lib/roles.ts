@@ -54,18 +54,19 @@ function addIdRole(id: string, set: Set<string>) {
 }
 
 /**
- * แปลง Role ทางเทคนิคให้เป็นข้อความภาษาไทยที่อ่านง่ายสำหรับแสดงในอีเมลและหน้าจอ
+ * แปลง Role ทางเทคนิคให้เป็นชื่อบทบาทที่อ่านง่ายสำหรับแสดงในอีเมลและหน้าจอ
  */
 export function formatDisplayRole(userOrRoles: any): string {
 	const roleList = Array.isArray(userOrRoles) ? userOrRoles : getUserRoles(userOrRoles);
 	const cleanRoles = roleList.filter((r) => !isRawRoleId(r));
-	if (cleanRoles.some((r) => ['super_admin', 'superadmin', 'admin'].includes(r))) return 'ผู้ดูแลระบบ';
-	if (cleanRoles.includes('head')) return 'หัวหน้าภาควิชา';
-	if (cleanRoles.some((r) => ['teacher', 'teachers'].includes(r))) return 'อาจารย์';
-	if (cleanRoles.some((r) => ['staff', 'stuff'].includes(r))) return 'เจ้าหน้าที่';
-	if (cleanRoles.some((r) => ['student', 'students'].includes(r))) return 'นักศึกษา';
-	if (cleanRoles.some((r) => ['guest', 'guests'].includes(r))) return 'บุคคลภายนอก';
-	return cleanRoles.length > 0 ? cleanRoles[0] : 'นักศึกษา';
+	if (cleanRoles.some((r) => ['super_admin', 'superadmin'].includes(r))) return 'Super Admin';
+	if (cleanRoles.includes('admin')) return 'ผู้ดูแลระบบ (Admin)';
+	if (cleanRoles.includes('head')) return 'หัวหน้าภาควิชา (Head)';
+	if (cleanRoles.some((r) => ['teacher', 'teachers'].includes(r))) return 'อาจารย์ (Teacher)';
+	if (cleanRoles.some((r) => ['staff', 'stuff'].includes(r))) return 'เจ้าหน้าที่ (Staff)';
+	if (cleanRoles.some((r) => ['student', 'students'].includes(r))) return 'นักศึกษา (Student)';
+	if (cleanRoles.some((r) => ['guest', 'guests'].includes(r))) return 'บุคคลภายนอก (Guest)';
+	return cleanRoles.length > 0 ? cleanRoles[0] : 'ผู้ใช้งาน';
 }
 
 /**
