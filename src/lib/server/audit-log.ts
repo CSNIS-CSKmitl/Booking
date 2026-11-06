@@ -57,7 +57,7 @@ export async function writeAdminAction(input: {
   if (!pb) return;
   try {
     await pb.collection("admin_actions").create({
-      service: "booking",
+      service: "utmqt5k92gmsodh", // Booking relation in services
       action: input.action,
       actor: input.actorId,
       target_collection: "bookings",
@@ -87,7 +87,7 @@ export async function writeServiceAudit(
   try {
     const clientIp = sourceIp(event);
     await pb.collection("service_access_logs").create({
-      service: "booking",
+      service: "utmqt5k92gmsodh", // Booking relation in services
       user: input.userId || undefined,
       source_ip: clientIp,
       method: event.request.method,

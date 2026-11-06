@@ -4,7 +4,8 @@ import PocketBase from "pocketbase";
 import { env } from "$env/dynamic/private";
 import type { RequestHandler } from "./$types";
 
-const site = "booking";
+const site = "utmqt5k92gmsodh"; // Booking relation ID in services
+const siteSlug = "booking";
 const pbUrl =
   env.POCKETBASE_URL ??
   env.PUBLIC_POCKETBASE_URL ??
@@ -32,6 +33,7 @@ export const GET: RequestHandler = async () => {
           (x: any) =>
             !x.targets?.length ||
             x.targets.includes("all") ||
+            x.targets.includes(siteSlug) ||
             x.targets.includes(site),
         ),
         configured: true,
