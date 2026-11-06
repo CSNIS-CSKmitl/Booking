@@ -5,7 +5,8 @@ type AuthUser = {
 	email: string;
 	name: string;
 	username?: string;
-	user_type?: string;
+	user_type?: string | string[];
+	roles?: string[];
 	isAdmin?: boolean;
 };
 

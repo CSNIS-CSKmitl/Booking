@@ -1,3 +1,4 @@
+import { isBookingAdmin } from '$lib/roles';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import PocketBase from 'pocketbase';
@@ -19,8 +20,8 @@ async function adminClient() {
 
 function requireSuperadmin(user: App.Locals['user']) {
 	if (!user) throw redirect(303, '/login?redirect=%2Fadmin');
-	if (user.user_type !== SUPERADMIN && user.email !== env.PB_ADMIN_EMAIL)
-		throw error(403, 'หน้านี้สำหรับ Superadmin เท่านั้น');
+	if (!isBookingAdmin(user, env.PB_ADMIN_EMAIL))
+		throw error(403, 'หน้านี้สำหรับ Superadmin หรือ Head เท่านั้น');
 }
 
 export const load: PageServerLoad = async ({ locals }) => {

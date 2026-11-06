@@ -1,3 +1,4 @@
+import { getUserRoles, isBookingAdmin } from '$lib/roles';
 import type { Handle } from '@sveltejs/kit';
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
@@ -7,7 +8,8 @@ type AuthUser = {
     email: string;
     name: string;
     username?: string;
-    user_type?: string;
+    user_type?: string | string[];
+    roles?: string[];
     isAdmin?: boolean;
 };
 
@@ -81,7 +83,7 @@ async function fetchFreshUserFromPb(email: string): Promise<AuthUser | null> {
     try {
         // escape quote กัน filter injection
         const safe = email.replace(/"/g, '\\"');
-        const fresh = await pb.collection('users').getFirstListItem(`email = "${safe}"`);
+        const fresh = await pb.collection('users').getFirstListItem(`email = "${safe}"`, { expand: 'user_type' });
         if (!fresh?.id || !fresh?.email) return null;
         return {
             id: fresh.id,
@@ -89,6 +91,8 @@ async function fetchFreshUserFromPb(email: string): Promise<AuthUser | null> {
             name: fresh.name ?? '',
             username: fresh.username,
             user_type: fresh.user_type ?? '',
+            roles: getUserRoles(fresh),
+            isAdmin: isBookingAdmin(fresh, PB_ADMIN_EMAIL),
         };
     } catch (err) {
         // ลองค้นหาใน admins เผื่อเป็นผู้ดูแลระบบหลัก (PocketBase legacy Admin)

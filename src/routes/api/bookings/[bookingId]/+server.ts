@@ -1,3 +1,4 @@
+import { isBookingAdmin } from '$lib/roles';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PocketBase from 'pocketbase';
@@ -26,7 +27,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
         const booking = await pb.collection('bookings').getOne(bookingId);
         
         // 2. Validate permissions: must be superadmin or the original booker
-        const isAdmin = locals.user.user_type === '000000000000009' || locals.user.email === PB_ADMIN_EMAIL;
+        const isAdmin = isBookingAdmin(locals.user, PB_ADMIN_EMAIL);
         const isOwner = booking.booker_id === locals.user.id || booking.bookerEmail === locals.user.email;
         if (!isAdmin && !isOwner) {
             throw error(403, 'ไม่มีสิทธิ์แก้ไขรายการจองนี้');
@@ -68,7 +69,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
         const booking = await pb.collection('bookings').getOne(bookingId);
         
         // 2. Validate permissions: must be superadmin or the original booker
-        const isAdmin = locals.user.user_type === '000000000000009' || locals.user.email === PB_ADMIN_EMAIL;
+        const isAdmin = isBookingAdmin(locals.user, PB_ADMIN_EMAIL);
         const isOwner = booking.booker_id === locals.user.id || booking.bookerEmail === locals.user.email;
         if (!isAdmin && !isOwner) {
             throw error(403, 'ไม่มีสิทธิ์ยกเลิกรายการจองนี้');

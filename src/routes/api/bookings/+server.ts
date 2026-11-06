@@ -1,3 +1,4 @@
+import { isBookingAdmin } from '$lib/roles';
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import PocketBase from 'pocketbase';
@@ -122,7 +123,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const data = result.data;
 
     // ตรวจสอบสิทธิ์ Superadmin
-    const isAdmin = locals.user.user_type === '000000000000009' || locals.user.email === PB_ADMIN_EMAIL;
+    const isAdmin = isBookingAdmin(locals.user, PB_ADMIN_EMAIL);
     if (data.isRecurring && !isAdmin) {
         throw error(403, 'คุณไม่มีสิทธิ์ทำรายการจองซ้ำรายสัปดาห์');
     }
