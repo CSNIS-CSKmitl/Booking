@@ -15,7 +15,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     let record = payload.record;
 
     // Auto-assign the default user_type on first-time OAuth login
-    if (!record.user_type && env.PB_ADMIN_EMAIL && env.PB_ADMIN_PASSWORD) {
+    const hasNoRole = !record.user_type || (Array.isArray(record.user_type) && record.user_type.length === 0);
+    if (hasNoRole && env.PB_ADMIN_EMAIL && env.PB_ADMIN_PASSWORD) {
         try {
             const pbAdmin = new PocketBase(env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? 'http://192.168.15.14:8080');
             pbAdmin.autoCancellation(false);
@@ -81,7 +82,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
         let record = authData.record;
 
         // Auto-assign the default user_type on first-time OAuth login
-        if (!record.user_type && env.PB_ADMIN_EMAIL && env.PB_ADMIN_PASSWORD) {
+        const hasNoRole = !record.user_type || (Array.isArray(record.user_type) && record.user_type.length === 0);
+    if (hasNoRole && env.PB_ADMIN_EMAIL && env.PB_ADMIN_PASSWORD) {
             try {
                 const pbAdmin = new PocketBase(pbUrl);
                 pbAdmin.autoCancellation(false);
