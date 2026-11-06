@@ -37,7 +37,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const mappedRooms = rooms.map((r) => ({
 			id: r.id,
 			name: r.name,
-			location: r.location ?? ''
+			location: r.location ?? '',
+			seats: r.seats ?? null,
+			image_url: r.image_url ?? '',
+			booking_url: r.booking_url ?? ''
 		}));
 		const mappedBookings = bookings.map((b) => ({
 			id: b.id,
@@ -107,7 +110,10 @@ export const actions: Actions = {
 			) {
 				return fail(409, { message: 'มีห้องชื่อนี้อยู่แล้ว' });
 			}
-			await pb.collection('rooms').create({ name, location, created_by: locals.user!.id, updated_by: locals.user!.id });
+			const seatsVal = form.get('seats');
+			const seats = seatsVal && !isNaN(Number(seatsVal)) ? Math.max(0, parseInt(String(seatsVal), 10)) : null;
+			const image_url = String(form.get('image_url') ?? '').trim();
+			await pb.collection('rooms').create({ name, location, seats, image_url: image_url || undefined, created_by: locals.user!.id, updated_by: locals.user!.id });
 			return { ok: true, message: 'เพิ่มห้องเรียบร้อยแล้ว' };
 		} catch (cause) {
 			console.error('admin create room failed', cause);

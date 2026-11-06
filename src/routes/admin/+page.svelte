@@ -106,7 +106,7 @@
 			<form
 				method="POST"
 				action="?/createRoom"
-				class="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end"
+				class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_0.8fr_1.5fr_auto] items-end"
 			>
 				<label class="grid gap-1 text-sm">
 					<span>ชื่อห้อง <span class="text-rose-600">*</span></span>
@@ -129,9 +129,28 @@
 						placeholder="เช่น อาคารวิศวกรรม ชั้น 7"
 					/>
 				</label>
+				<label class="grid gap-1 text-sm">
+					<span>จำนวนที่นั่ง</span>
+					<input
+						name="seats"
+						type="number"
+						min="0"
+						class="h-10 rounded-lg border border-input bg-background px-3"
+						placeholder="เช่น 40"
+					/>
+				</label>
+				<label class="grid gap-1 text-sm">
+					<span>URL รูปภาพ</span>
+					<input
+						name="image_url"
+						type="url"
+						class="h-10 rounded-lg border border-input bg-background px-3"
+						placeholder="https://..."
+					/>
+				</label>
 				<button
 					type="submit"
-					class="h-10 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"
+					class="h-10 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 whitespace-nowrap"
 				>
 					เพิ่มห้อง
 				</button>
@@ -145,13 +164,21 @@
 					{@const roomFilter = `room:${room.id}` as const}
 					<button
 						type="button"
-						class="rounded-lg border px-3 py-2 text-left transition {activeFilter === roomFilter
+						class="flex items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition {activeFilter === roomFilter
 							? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20'
 							: 'border-border/70 hover:border-indigo-300'}"
 						onclick={() => (activeFilter = activeFilter === roomFilter ? 'all' : roomFilter)}
 					>
-						<p class="font-medium">{room.name}</p>
-						<p class="text-xs text-muted-foreground">{room.location || 'ไม่ระบุสถานที่'}</p>
+						{#if room.image_url}
+							<img src={room.image_url} alt="" class="h-10 w-10 shrink-0 rounded object-cover border border-border" />
+						{/if}
+						<div class="min-w-0 flex-1">
+							<p class="font-medium truncate">{room.name}</p>
+							<p class="text-xs text-muted-foreground truncate">
+								{room.location || 'ไม่ระบุสถานที่'}
+								{#if room.seats} • {room.seats} ที่นั่ง{/if}
+							</p>
+						</div>
 					</button>
 				{:else}
 					<p class="text-sm text-muted-foreground">ยังไม่มีห้อง</p>

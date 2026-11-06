@@ -26,7 +26,9 @@
 	import { Button } from "$lib/components/ui/button";
 	import { AlertCircle, Loader2, CalendarPlus } from "@lucide/svelte";
 
+	let { data } = $props();
 	const pocketbaseUrl = env.PUBLIC_POCKETBASE_URL || "";
+	const teachers = $derived(data.teachers ?? []);
 	const user = $derived(page.data.user);
 	const isAdmin = $derived(user?.isAdmin ?? false);
 
