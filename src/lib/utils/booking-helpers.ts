@@ -75,6 +75,7 @@ export function validateForm(fields: {
   endTime: string;
   title: string;
   advisorName?: string;
+  advisorMode?: "strict_select" | "allow_custom" | "hidden";
   isStudent?: boolean;
   isRecurring: boolean;
   recurringUntil: string;
@@ -98,7 +99,7 @@ export function validateForm(fields: {
   if (!startTime || !endTime) return "กรุณาระบุเวลาเริ่มและเวลาสิ้นสุด";
   if (startTime >= endTime) return "เวลาเริ่มต้องน้อยกว่าเวลาจบ";
   if (!title.trim()) return "กรุณากรอกหัวข้อการจอง";
-  if (fields.isStudent && (!advisorName || !advisorName.trim())) {
+  if ((fields.advisorMode === "strict_select" || fields.isStudent) && (!advisorName || !advisorName.trim())) {
     return "กรุณาเลือกอาจารย์ที่ปรึกษา";
   }
   if (isRecurring) {

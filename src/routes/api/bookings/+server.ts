@@ -1,4 +1,4 @@
-import { isBookingAdmin, getUserRoles, formatDisplayRole, isStudentRole } from "$lib/roles";
+import { isBookingAdmin, getUserRoles, formatDisplayRole, isStudentRole, getAdvisorFieldMode } from "$lib/roles";
 import {
   resolveBookingRecipients,
   sendBookingNotificationEmail,
@@ -68,8 +68,8 @@ function validateBody(
   ) {
     return { ok: false, error: "อีเมลอาจารย์ที่ปรึกษาไม่ถูกต้อง" };
   }
-  const isStudent = isStudentRole(user);
-  if (isStudent) {
+  const advisorMode = getAdvisorFieldMode(user);
+  if (advisorMode === "strict_select") {
     if (!advisorName || typeof advisorName !== "string" || !advisorName.trim()) {
       return { ok: false, error: "กรุณาเลือกอาจารย์ที่ปรึกษา" };
     }

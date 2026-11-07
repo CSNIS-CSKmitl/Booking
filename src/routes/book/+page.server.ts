@@ -2,7 +2,7 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import PocketBase from "pocketbase";
 import { env } from "$env/dynamic/private";
-import { getUserRoles, isStudentRole } from "$lib/roles";
+import { getUserRoles, isStudentRole, getAdvisorFieldMode, type AdvisorFieldMode } from "$lib/roles";
 
 /**
  * หน้า /book ต้อง login ก่อนเสมอ — ถ้ายังไม่ได้ login ให้ redirect ไป /login
@@ -48,9 +48,11 @@ export const load: PageServerLoad = async ({ locals, url }) => {
   }
 
   const isStudent = isStudentRole(locals.user);
+  const advisorMode: AdvisorFieldMode = getAdvisorFieldMode(locals.user);
 
   return {
     teachers,
     isStudent,
+    advisorMode,
   };
 };

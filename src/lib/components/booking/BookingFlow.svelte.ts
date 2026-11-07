@@ -1,3 +1,4 @@
+import type { AdvisorFieldMode } from "$lib/roles";
 import {
   getTodayDate,
   isValidRoomId,
@@ -38,14 +39,18 @@ export class BookingFlow {
   validationError = $state<string | null>(null);
 
   isAdminGetter: () => boolean;
-  isStudentGetter?: () => boolean;
+  advisorModeGetter?: () => AdvisorFieldMode;
 
   get isAdmin() {
     return this.isAdminGetter();
   }
 
+  get advisorMode(): AdvisorFieldMode {
+    return this.advisorModeGetter ? this.advisorModeGetter() : "hidden";
+  }
+
   get isStudent() {
-    return this.isStudentGetter ? this.isStudentGetter() : false;
+    return this.advisorMode === "strict_select";
   }
   pb: PocketBase | null = null;
 
@@ -66,9 +71,9 @@ export class BookingFlow {
       .join(", "),
   );
 
-  constructor(isAdminGetter: () => boolean, isStudentGetter?: () => boolean) {
+  constructor(isAdminGetter: () => boolean, advisorModeGetter?: () => AdvisorFieldMode) {
     this.isAdminGetter = isAdminGetter;
-    this.isStudentGetter = isStudentGetter;
+    this.advisorModeGetter = advisorModeGetter;
   }
 
   init(pbInstance: PocketBase) {
@@ -169,6 +174,7 @@ export class BookingFlow {
       endTime: this.endTime,
       title: this.title,
       advisorName: this.advisorName,
+      advisorMode: this.advisorMode,
       isStudent: this.isStudent,
       isRecurring: this.isRecurring,
       recurringUntil: this.recurringUntil,

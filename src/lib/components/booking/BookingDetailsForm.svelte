@@ -4,7 +4,8 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { slide } from "svelte/transition";
-	import { GraduationCap, Mail } from "@lucide/svelte";
+	import { GraduationCap, Mail, PenLine, ListFilter } from "@lucide/svelte";
+	import type { AdvisorFieldMode } from "$lib/roles";
 
 	let {
 		title = $bindable(),
@@ -13,7 +14,7 @@
 		advisorEmail = $bindable(""),
 		customBookerName = $bindable(),
 		isAdmin,
-		isStudent = false,
+		advisorMode = "hidden",
 		teachers = [],
 	}: {
 		title: string;
@@ -22,10 +23,11 @@
 		advisorEmail?: string;
 		customBookerName: string;
 		isAdmin: boolean;
-		isStudent?: boolean;
+		advisorMode?: AdvisorFieldMode;
 		teachers?: { id: string; name: string; email?: string }[];
 	} = $props();
 
+	let isCustomAdvisor = $state(false);
 	let selectedTeacherId = $state("");
 
 	// Sync selectedTeacherId if advisorName is set externally
@@ -34,9 +36,13 @@
 			const matched = teachers.find(
 				(t) => t.name.trim().toLowerCase() === advisorName.trim().toLowerCase()
 			);
-			if (matched && selectedTeacherId !== matched.id) {
-				selectedTeacherId = matched.id;
-				advisorEmail = matched.email || "";
+			if (matched) {
+				if (selectedTeacherId !== matched.id) {
+					selectedTeacherId = matched.id;
+					advisorEmail = matched.email || "";
+				}
+			} else if (advisorMode === "allow_custom") {
+				isCustomAdvisor = true;
 			}
 		} else if (!advisorName) {
 			selectedTeacherId = "";
@@ -46,6 +52,13 @@
 	function handleTeacherChange(e: Event) {
 		const select = e.target as HTMLSelectElement;
 		const id = select.value;
+		if (id === "__custom__") {
+			isCustomAdvisor = true;
+			advisorName = "";
+			advisorEmail = "";
+			selectedTeacherId = "";
+			return;
+		}
 		selectedTeacherId = id;
 		const teacher = teachers.find((t) => t.id === id);
 		if (teacher) {
@@ -115,40 +128,107 @@
 			</div>
 		{/if}
 
-		<!-- Advisor Section: Mandatory selection only (ห้ามกรอกเอง บังคับเลือกทุกครั้ง) -->
-		<div class="flex flex-col gap-1.5">
-			<Label for="book-advisor" class="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
-				<GraduationCap class="size-3.5 text-indigo-600" />
-				อาจารย์ที่ปรึกษา <span class="text-destructive font-bold">*</span>
-			</Label>
+		<!-- Advisor Section:
+		     1. 'strict_select' (Student และ Role Admin): บังคับเลือกจาก Dropdown เท่านั้น ห้ามพิมพ์เอง
+		     2. 'allow_custom' (Staff และ Super Admin): มีให้ใส่ชื่อเองได้ หรือเลือกจากรายชื่ออาจารย์ (ไม่บังคับ)
+		     3. 'hidden' (Teacher, Head): ซ่อน ไม่ต้องแสดง
+		-->
+		{#if advisorMode === "strict_select"}
+			<div class="flex flex-col gap-1.5" transition:slide>
+				<Label for="book-advisor" class="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+					<GraduationCap class="size-3.5 text-indigo-600" />
+					อาจารย์ที่ปรึกษา <span class="text-destructive font-bold">*</span>
+				</Label>
 
-			<select
-				id="book-advisor"
-				value={selectedTeacherId}
-				onchange={handleTeacherChange}
-				required
-				class="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600 cursor-pointer"
-			>
-				<option value="">-- กรุณาเลือกอาจารย์ที่ปรึกษา --</option>
-				{#each teachers as t (t.id)}
-					<option value={t.id}>
-						{t.name}{t.email ? ` (${t.email})` : ''}
-					</option>
-				{/each}
-			</select>
+				<select
+					id="book-advisor"
+					value={selectedTeacherId}
+					onchange={handleTeacherChange}
+					required
+					class="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600 cursor-pointer"
+				>
+					<option value="">-- กรุณาเลือกอาจารย์ที่ปรึกษา --</option>
+					{#each teachers as t (t.id)}
+						<option value={t.id}>
+							{t.name}{t.email ? ` (${t.email})` : ''}
+						</option>
+					{/each}
+				</select>
 
-			<!-- Notification helper badge -->
-			{#if advisorEmail}
-				<div class="flex items-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-md px-2.5 py-1 mt-0.5" transition:slide>
-					<Mail class="size-3 shrink-0" />
-					<span>อีเมลแจ้งเตือนอาจารย์: <b class="font-mono font-medium">{advisorName} ({advisorEmail})</b></span>
+				{#if advisorEmail}
+					<div class="flex items-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-md px-2.5 py-1 mt-0.5" transition:slide>
+						<Mail class="size-3 shrink-0" />
+						<span>ส่งการแจ้งเตือนไปยัง: <strong class="font-mono">{advisorEmail}</strong></span>
+					</div>
+				{/if}
+			</div>
+		{:else if advisorMode === "allow_custom"}
+			<div class="flex flex-col gap-1.5" transition:slide>
+				<div class="flex items-center justify-between">
+					<Label for="book-advisor" class="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+						<GraduationCap class="size-3.5 text-indigo-600" />
+						อาจารย์ที่ปรึกษา <span class="text-muted-foreground font-normal">(ไม่บังคับ)</span>
+					</Label>
+					{#if teachers && teachers.length > 0}
+						<button
+							type="button"
+							onclick={() => {
+								isCustomAdvisor = !isCustomAdvisor;
+								if (!isCustomAdvisor && selectedTeacherId) {
+									const teacher = teachers.find((t) => t.id === selectedTeacherId);
+									if (teacher) {
+										advisorName = teacher.name;
+										advisorEmail = teacher.email || "";
+									}
+								}
+							}}
+							class="text-[11px] text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 font-medium cursor-pointer flex items-center gap-1"
+						>
+							{#if isCustomAdvisor}
+								<ListFilter class="size-3" />
+								<span>เลือกจากรายชื่ออาจารย์</span>
+							{:else}
+								<PenLine class="size-3" />
+								<span>พิมพ์ระบุชื่อเอง</span>
+							{/if}
+						</button>
+					{/if}
 				</div>
-			{:else}
-				<p class="text-[11px] text-muted-foreground mt-0.5">
-					* บังคับเลือกอาจารย์ที่ปรึกษาจากรายชื่อ เพื่อส่งอีเมลแจ้งเตือนทุกครั้งที่มีการจอง
-				</p>
-			{/if}
-		</div>
+
+				{#if isCustomAdvisor || !teachers || teachers.length === 0}
+					<Input
+						id="book-advisor"
+						type="text"
+						bind:value={advisorName}
+						maxlength={100}
+						placeholder="พิมพ์ชื่ออาจารย์ที่ปรึกษา (เช่น ศ.ดร. ...)"
+						class="rounded-lg border-border focus-visible:ring-indigo-600/10 focus-visible:border-indigo-600"
+					/>
+				{:else}
+					<select
+						id="book-advisor"
+						value={selectedTeacherId}
+						onchange={handleTeacherChange}
+						class="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600 cursor-pointer"
+					>
+						<option value="">-- ไม่ระบุอาจารย์ที่ปรึกษา --</option>
+						{#each teachers as t (t.id)}
+							<option value={t.id}>
+								{t.name}{t.email ? ` (${t.email})` : ''}
+							</option>
+						{/each}
+						<option value="__custom__">✏️ พิมพ์ระบุชื่อเอง...</option>
+					</select>
+				{/if}
+
+				{#if advisorEmail}
+					<div class="flex items-center gap-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-md px-2.5 py-1 mt-0.5" transition:slide>
+						<Mail class="size-3 shrink-0" />
+						<span>ส่งการแจ้งเตือนไปยัง: <strong class="font-mono">{advisorEmail}</strong></span>
+					</div>
+				{/if}
+			</div>
+		{/if}
 
 		<div class="flex flex-col gap-1.5">
 			<Label
@@ -163,7 +243,7 @@
 				placeholder="เช่น ระบุจำนวนผู้เข้าร่วม หรืออุปกรณ์เสริมที่ต้องการเพิ่มเติม"
 				rows={3}
 				maxlength={500}
-				class="rounded-lg border-border focus-visible:ring-indigo-600/10 focus-visible:border-indigo-600"
+				class="resize-none rounded-lg border-border focus-visible:ring-indigo-600/10 focus-visible:border-indigo-600"
 			/>
 		</div>
 	</Card.Content>

@@ -149,3 +149,35 @@ export function isStudentRole(user: any): boolean {
     /^\d{8}@/.test(user.email || "")
   );
 }
+
+export type AdvisorFieldMode = "strict_select" | "allow_custom" | "hidden";
+
+/**
+ * กำหนดโหมดของฟิลด์อาจารย์ที่ปรึกษาตาม Role:
+ * - 'allow_custom': เจ้าหน้าที่ (Staff) และ แอดมิน (Super Admin) -> ใส่ชื่อเองได้อิสระ ไม่บังคับ
+ * - 'strict_select': นักศึกษา (Student) และ แอดมิน (Role Admin) -> บังคับเลือกจาก Dropdown เท่านั้น ห้ามพิมพ์เอง
+ * - 'hidden': อาจารย์ (Teacher) และ หัวหน้าภาค (Head) -> ซ่อนฟิลด์ ไม่ต้องกรอก
+ */
+export function getAdvisorFieldMode(user: any): AdvisorFieldMode {
+  if (!user) return "hidden";
+  const roles = getUserRoles(user);
+
+  // 1. เจ้าหน้าที่ (Staff) และ แอดมิน (Super Admin) -> ใส่ชื่อเองได้
+  const isSuperAdminOrStaff = roles.some((r) =>
+    ["super_admin", "superadmin", "staff", "stuff"].includes(r),
+  );
+  if (isSuperAdminOrStaff) {
+    return "allow_custom";
+  }
+
+  // 2. นักศึกษา (Student) และ Role Admin -> เหมือนนักเรียน บังคับเลือกจาก Dropdown
+  const isAdminOrStudent =
+    roles.some((r) => ["admin", "student", "students"].includes(r)) ||
+    /^\d{8}@/.test(user.email || "");
+  if (isAdminOrStudent) {
+    return "strict_select";
+  }
+
+  // 3. อาจารย์ (Teacher) หรือ หัวหน้าภาค (Head) หรืออื่นๆ -> ซ่อน
+  return "hidden";
+}
