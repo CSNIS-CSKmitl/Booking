@@ -32,9 +32,8 @@
 			<!-- Left: brand -->
 			<a
 				href="/book"
-				class="flex items-center gap-2.5 text-sm font-semibold tracking-tight text-foreground transition-opacity hover:opacity-85"
+				class="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground transition-opacity hover:opacity-85"
 			>
-				<span class="size-2 rounded-full bg-emerald-500"></span>
 				<span>Booking</span>
 				<span
 					class="hidden text-xs font-normal text-muted-foreground sm:inline"
