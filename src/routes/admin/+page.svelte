@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
-	import { Trash2, Pencil } from '@lucide/svelte';
+	import { Trash2, Pencil, FileText, CalendarDays, DoorOpen, User, GraduationCap, Eye } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import {
 		computeBookingStats,
@@ -120,11 +120,33 @@
 		}
 		await handleRefresh();
 	}
-	async function cancel(id: string) {
+	function isBookingPast(booking: any): boolean {
+		const endStr = booking?.end_time;
+		if (!endStr) return false;
+		const end = new Date(String(endStr).replace(' ', 'T'));
+		return !isNaN(end.getTime()) && end.getTime() < Date.now();
+	}
+
+	let selectedBooking = $state<any | null>(null);
+	let detailDialogOpen = $state(false);
+
+	function openBookingDetail(booking: any) {
+		selectedBooking = booking;
+		detailDialogOpen = true;
+	}
+
+	async function cancel(id: string, isPast = false) {
+		if (isPast) {
+			alert('ไม่สามารถยกเลิกการจองที่ผ่านมาแล้วได้');
+			return;
+		}
 		if (!confirm('ยืนยันยกเลิกการจองนี้หรือไม่')) return;
 		const body = new FormData();
 		body.set('bookingId', id);
 		await fetch('?/cancel', { method: 'POST', body });
+		if (detailDialogOpen && selectedBooking?.id === id) {
+			detailDialogOpen = false;
+		}
 		await handleRefresh();
 	}
 </script>
@@ -323,14 +345,22 @@
 					</thead>
 					<tbody>
 						{#each filteredBookings as booking (booking.id)}
-							<tr class="border-b border-border/60 last:border-0">
+							{@const isPast = isBookingPast(booking)}
+							<tr 
+								class="border-b border-border/60 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
+								onclick={() => openBookingDetail(booking)}
+								title="คลิกเพื่อดูรายละเอียดการจอง"
+							>
 								<td class="px-4 py-3 font-medium">
-									{booking.title}
+									<div class="flex items-center gap-1.5">
+										<span class="text-foreground font-semibold hover:underline">{booking.title}</span>
+										<Eye class="size-3 text-muted-foreground/60 shrink-0" />
+									</div>
 									{#if booking.advisorName}
 										<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}</p>
 									{/if}
 									{#if booking.detailLabel}
-										<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-muted-foreground">หมายเหตุ: {booking.detailLabel}</p>
+										<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 max-w-md">หมายเหตุ: {booking.detailLabel}</p>
 									{/if}
 								</td>
 								<td class="px-4 py-3">
@@ -353,13 +383,21 @@
 					{#if booking.approvedBy || booking.approvedAt}<p class="text-xs text-muted-foreground">อนุมัติโดย: {booking.approvedBy || 'ระบบ'}{booking.approvedAt ? ` · ${displayDate(booking.approvedAt)}` : ''}</p>{/if}
 								</td>
 								<td class="px-4 py-3 text-right">
-									{#if booking.status !== 'cancelled'}
+									{#if booking.status !== 'cancelled' && !isPast}
 										<button
-											class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
-											onclick={() => booking.id && cancel(booking.id)}
+											type="button"
+											class="rounded-lg border border-rose-200 dark:border-rose-900/60 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+											onclick={(e) => {
+												e.stopPropagation();
+												booking.id && cancel(booking.id, false);
+											}}
 										>
 											ยกเลิก
 										</button>
+									{:else if isPast}
+										<span class="inline-flex rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground font-medium">
+											สิ้นสุดแล้ว
+										</span>
 									{:else}
 										<span class="text-xs text-muted-foreground">-</span>
 									{/if}
@@ -477,3 +515,121 @@
 	</Dialog.Content>
 </Dialog.Root>
 </div>
+<Dialog.Root bind:open={detailDialogOpen}>
+	<Dialog.Content class="sm:max-w-[560px] bg-card border border-border rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+		{#if selectedBooking}
+			{@const isPast = isBookingPast(selectedBooking)}
+			<Dialog.Header class="space-y-2 pb-3 border-b border-border">
+				<div class="flex items-center justify-between gap-2">
+					<span
+						class={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass[selectedBooking.status ?? ''] ?? 'bg-slate-100 text-slate-600'}`}
+					>
+						{statusText[selectedBooking.status ?? ''] ?? selectedBooking.status ?? '-'}
+					</span>
+					{#if isPast}
+						<span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs text-muted-foreground font-medium">
+							ช่วงเวลาสิ้นสุดแล้ว
+						</span>
+					{:else}
+						<span class="rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 text-xs font-medium border border-emerald-500/20">
+							กำลังจะมาถึง
+						</span>
+					{/if}
+				</div>
+				<Dialog.Title class="text-xl font-bold text-foreground">
+					{selectedBooking.title}
+				</Dialog.Title>
+				<Dialog.Description class="text-xs text-muted-foreground">
+					รหัสการจอง: <code class="font-mono text-[11px]">{selectedBooking.id}</code>
+				</Dialog.Description>
+			</Dialog.Header>
+
+			<div class="space-y-4 py-4">
+				<!-- หมายเหตุ ชัดๆ เด่นๆ -->
+				<div class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 shadow-2xs">
+					<div class="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 mb-2">
+						<FileText class="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+						<span class="tracking-wide">หมายเหตุ / สิ่งที่ต้องการเพิ่มเติม</span>
+					</div>
+					{#if selectedBooking.detailLabel}
+						<div class="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed bg-background/90 rounded-lg p-3 border border-amber-500/20">
+							{selectedBooking.detailLabel}
+						</div>
+					{:else}
+						<p class="text-xs italic text-muted-foreground py-1">ไม่มีระบุหมายเหตุ</p>
+					{/if}
+				</div>
+
+				<!-- Grid ข้อมูลการจอง -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<DoorOpen class="size-3.5 text-indigo-600" /> ห้องที่จอง
+						</span>
+						<p class="text-sm font-semibold text-foreground">
+							{selectedBooking.roomName}{selectedBooking.location ? ` (${selectedBooking.location})` : ''}
+						</p>
+					</div>
+
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<CalendarDays class="size-3.5 text-indigo-600" /> วันและเวลา
+						</span>
+						<p class="text-xs font-semibold text-foreground leading-snug">
+							{displayDate(selectedBooking.start_time)}<br />ถึง {displayDate(selectedBooking.end_time)}
+						</p>
+					</div>
+
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<User class="size-3.5 text-indigo-600" /> ผู้จอง
+						</span>
+						<p class="text-sm font-semibold text-foreground">{selectedBooking.bookerName || '-'}</p>
+						<p class="text-muted-foreground font-mono text-[11px]">{selectedBooking.bookerEmail || '-'}</p>
+					</div>
+
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<GraduationCap class="size-3.5 text-indigo-600" /> อาจารย์ที่ปรึกษา
+						</span>
+						<p class="text-sm font-semibold text-foreground">{selectedBooking.advisorName || 'ไม่ระบุ'}</p>
+					</div>
+				</div>
+
+				<!-- Audit Info -->
+				<div class="rounded-lg border border-border/60 bg-muted/10 p-3 text-[11px] text-muted-foreground space-y-1 font-mono">
+					<p>เพิ่มโดย: {selectedBooking.createdBy || '-'}</p>
+					<p>แก้ไขโดย: {selectedBooking.updatedBy || '-'}</p>
+					{#if selectedBooking.approvedBy || selectedBooking.approvedAt}
+						<p>อนุมัติโดย: {selectedBooking.approvedBy || 'ระบบ'}{selectedBooking.approvedAt ? ` · ${displayDate(selectedBooking.approvedAt)}` : ''}</p>
+					{/if}
+				</div>
+			</div>
+
+			<Dialog.Footer class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border">
+				<div>
+					{#if selectedBooking.status !== 'cancelled' && !isPast}
+						<button
+							type="button"
+							class="rounded-lg border border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
+							onclick={() => cancel(selectedBooking.id, false)}
+						>
+							ยกเลิกการจองนี้
+						</button>
+					{:else if isPast}
+						<span class="text-xs text-muted-foreground italic">
+							การจองนี้สิ้นสุดลงแล้ว ไม่สามารถยกเลิกได้
+						</span>
+					{/if}
+				</div>
+				<button
+					type="button"
+					class="rounded-lg border border-border px-4 py-2 text-xs font-medium hover:bg-muted transition-colors cursor-pointer"
+					onclick={() => (detailDialogOpen = false)}
+				>
+					ปิด
+				</button>
+			</Dialog.Footer>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
