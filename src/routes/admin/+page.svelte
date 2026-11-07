@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
-	import { Trash2, Pencil, FileText, CalendarDays, DoorOpen, User, GraduationCap, Eye } from '@lucide/svelte';
+	import { Trash2, Pencil, FileText, CalendarDays, DoorOpen, User, GraduationCap, Eye, Download } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import {
 		computeBookingStats,
 		filterBookingsByDrilldown,
+		parseBookingDate,
 		filterBookingsByTimeRange,
 		type BookingDrilldownFilter,
 		type BookingTimeRange
@@ -121,10 +122,63 @@
 		await handleRefresh();
 	}
 	function isBookingPast(booking: any): boolean {
-		const endStr = booking?.end_time;
-		if (!endStr) return false;
-		const end = new Date(String(endStr).replace(' ', 'T'));
-		return !isNaN(end.getTime()) && end.getTime() < Date.now();
+		const end = parseBookingDate(booking?.end_time);
+		return end ? end.getTime() < Date.now() : false;
+	}
+
+	function exportBookingsCsv() {
+		const headers = [
+			'หัวข้อ',
+			'ห้อง',
+			'สถานที่',
+			'วันเวลาเริ่มต้น',
+			'วันเวลาสิ้นสุด',
+			'ผู้จอง',
+			'อีเมลผู้จอง',
+			'อาจารย์ที่ปรึกษา',
+			'อีเมลอาจารย์ที่ปรึกษา',
+			'สถานะ',
+			'หมายเหตุ',
+			'เพิ่มโดย',
+			'แก้ไขโดย',
+			'อนุมัติโดย',
+			'วันที่อนุมัติ'
+		];
+
+		const escapeCsv = (val: unknown) => {
+			if (val === null || val === undefined) return '""';
+			const s = String(val).replace(/"/g, '""');
+			return `"${s}"`;
+		};
+
+		const rows = filteredBookings.map((b) => [
+			escapeCsv(b.title || ''),
+			escapeCsv(b.roomName || ''),
+			escapeCsv(b.location || ''),
+			escapeCsv(displayDate(b.start_time)),
+			escapeCsv(displayDate(b.end_time)),
+			escapeCsv(b.bookerName || ''),
+			escapeCsv(b.bookerEmail || ''),
+			escapeCsv(b.advisorName || ''),
+			escapeCsv(b.advisorEmail || ''),
+			escapeCsv(statusText[b.status ?? ''] ?? b.status ?? ''),
+			escapeCsv(b.detailLabel || ''),
+			escapeCsv(b.createdBy || ''),
+			escapeCsv(b.updatedBy || ''),
+			escapeCsv(b.approvedBy || ''),
+			escapeCsv(b.approvedAt ? displayDate(b.approvedAt) : '')
+		]);
+
+		const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows.map((r) => r.join(','))].join('\n');
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', `bookings_export_${new Date().toISOString().slice(0, 10)}.csv`);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	}
 
 	let selectedBooking = $state<any | null>(null);
@@ -328,7 +382,17 @@
 						ยกเลิกแล้ว ({computedStats.cancelled})
 					</button>
 				</div>
-				<span class="text-xs text-muted-foreground">แสดง {filteredBookings.length} รายการ</span>
+				<div class="flex items-center gap-2">
+					<span class="text-xs text-muted-foreground">แสดง {filteredBookings.length} รายการ</span>
+					<button
+						type="button"
+						class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 transition-colors"
+						onclick={exportBookingsCsv}
+					>
+						<Download class="size-3.5" />
+						<span>Export CSV</span>
+					</button>
+				</div>
 			</div>
 
 			<div class="overflow-x-auto">

@@ -79,6 +79,44 @@
 		const next = activeFilter === filter && filter !== 'all' ? 'all' : filter;
 		onDrilldown?.(next);
 	}
+	function exportStatsCsv() {
+		const nowStr = new Date().toLocaleString('th-TH');
+		let csv = '\uFEFF';
+		csv += `รายงานสถิติระบบจองห้อง (Room Booking Statistics)\n`;
+		csv += `ช่วงเวลาที่เลือก: ${rangeLabel}\n`;
+		csv += `ส่งออกข้อมูลเมื่อ: ${nowStr}\n\n`;
+
+		csv += `ภาพรวมสถิติ\n`;
+		csv += `รายการ,ค่า\n`;
+		csv += `การจองทั้งหมด,${totalBookings}\n`;
+		csv += `กำลังใช้งาน,${stats.total || 0}\n`;
+		csv += `กำลังจะมาถึง,${stats.upcoming || 0}\n`;
+		csv += `ยกเลิกแล้ว,${stats.cancelled || 0}\n`;
+		csv += `อัตราการยกเลิก (%),${cancellationRate}%\n`;
+		csv += `ชั่วโมงการใช้งานรวม,${totalHours} ชม.\n`;
+		csv += `ห้องที่มีการจองมากที่สุด,${mostBookedRoom ? mostBookedRoom.name : 'ไม่มี'}\n`;
+		csv += `ช่วงเวลาที่จองหนาแน่นที่สุด,${peakHour ? peakHour.slot : 'ไม่มี'}\n`;
+		csv += `ผู้จองทั้งหมด,${stats.bookers || 0} คน\n\n`;
+
+		if (trend && trend.length > 0) {
+			csv += `แนวโน้มการจองตามช่วงเวลา\n`;
+			csv += `ช่วง,จำนวนครั้ง,จำนวนชั่วโมง\n`;
+			trend.forEach((t) => {
+				csv += `"${t.label}",${t.count || 0},${t.hours || 0}\n`;
+			});
+			csv += '\n';
+		}
+
+		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', `booking_stats_${selectedRange}_${new Date().toISOString().slice(0, 10)}.csv`);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <section class="space-y-4" aria-label="สถิติระบบจองห้อง">
@@ -108,12 +146,21 @@
 
 			<button
 				type="button"
-				class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 disabled:opacity-50"
+				class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 disabled:opacity-50 transition-colors"
 				onclick={() => onRefresh?.()}
 				disabled={loading}
 			>
 				<span class={loading ? ' inline-block animate-spin' : ''}>↻</span>
 				<span>{loading ? 'กำลังรีเฟรช...' : 'รีเฟรช'}</span>
+			</button>
+
+			<button
+				type="button"
+				class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 transition-colors"
+				onclick={exportStatsCsv}
+				title="ส่งออกข้อมูลสถิติเป็นไฟล์ CSV"
+			>
+				<span>Export Stat (CSV)</span>
 			</button>
 		</div>
 
