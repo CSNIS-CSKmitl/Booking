@@ -38,9 +38,14 @@ export class BookingFlow {
   validationError = $state<string | null>(null);
 
   isAdminGetter: () => boolean;
+  isStudentGetter?: () => boolean;
 
   get isAdmin() {
     return this.isAdminGetter();
+  }
+
+  get isStudent() {
+    return this.isStudentGetter ? this.isStudentGetter() : false;
   }
   pb: PocketBase | null = null;
 
@@ -61,8 +66,9 @@ export class BookingFlow {
       .join(", "),
   );
 
-  constructor(isAdminGetter: () => boolean) {
+  constructor(isAdminGetter: () => boolean, isStudentGetter?: () => boolean) {
     this.isAdminGetter = isAdminGetter;
+    this.isStudentGetter = isStudentGetter;
   }
 
   init(pbInstance: PocketBase) {
@@ -163,6 +169,7 @@ export class BookingFlow {
       endTime: this.endTime,
       title: this.title,
       advisorName: this.advisorName,
+      isStudent: this.isStudent,
       isRecurring: this.isRecurring,
       recurringUntil: this.recurringUntil,
       recurringDays: this.recurringDays,

@@ -2,7 +2,7 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import PocketBase from "pocketbase";
 import { env } from "$env/dynamic/private";
-import { getUserRoles } from "$lib/roles";
+import { getUserRoles, isStudentRole } from "$lib/roles";
 
 /**
  * หน้า /book ต้อง login ก่อนเสมอ — ถ้ายังไม่ได้ login ให้ redirect ไป /login
@@ -47,7 +47,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
     console.error("[book/load] Failed to load teachers:", err);
   }
 
+  const isStudent = isStudentRole(locals.user);
+
   return {
     teachers,
+    isStudent,
   };
 };

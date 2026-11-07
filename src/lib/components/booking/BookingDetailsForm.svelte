@@ -13,6 +13,7 @@
 		advisorEmail = $bindable(""),
 		customBookerName = $bindable(),
 		isAdmin,
+		isStudent = false,
 		teachers = [],
 	}: {
 		title: string;
@@ -21,6 +22,7 @@
 		advisorEmail?: string;
 		customBookerName: string;
 		isAdmin: boolean;
+		isStudent?: boolean;
 		teachers?: { id: string; name: string; email?: string }[];
 	} = $props();
 

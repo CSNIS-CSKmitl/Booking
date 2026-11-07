@@ -124,3 +124,28 @@ export function isBookingAdmin(user: any, adminEmail?: string): boolean {
     roles.includes("super_admin")
   );
 }
+
+/**
+ * ตรวจสอบว่าเป็นนักศึกษาหรือไม่ (ไม่ใช่ อาจารย์, เจ้าหน้าที่, หรือ แอดมิน)
+ */
+export function isStudentRole(user: any): boolean {
+  if (!user) return false;
+  const roles = getUserRoles(user);
+  const isTeacherOrStaffOrAdmin = roles.some((r) =>
+    [
+      "teacher",
+      "teachers",
+      "staff",
+      "stuff",
+      "head",
+      "super_admin",
+      "superadmin",
+      "admin",
+    ].includes(r),
+  );
+  if (isTeacherOrStaffOrAdmin) return false;
+  return (
+    roles.some((r) => ["student", "students"].includes(r)) ||
+    /^\d{8}@/.test(user.email || "")
+  );
+}

@@ -31,9 +31,10 @@
 	const teachers = $derived(data.teachers ?? []);
 	const user = $derived(page.data.user);
 	const isAdmin = $derived(user?.isAdmin ?? false);
+	const isStudent = $derived(data.isStudent ?? false);
 
 	// Instantiate Svelte 5 flow controller
-	const flow = new BookingFlow(() => isAdmin);
+	const flow = new BookingFlow(() => isAdmin, () => isStudent);
 
 	function getDayOfWeek(dateStr: string): number {
 		if (!dateStr) return 1;
@@ -143,6 +144,7 @@
 						bind:advisorEmail={flow.advisorEmail}
 						bind:customBookerName={flow.customBookerName}
 						{isAdmin}
+						{isStudent}
 						{teachers}
 					/>
 

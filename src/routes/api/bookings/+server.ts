@@ -1,4 +1,4 @@
-import { isBookingAdmin, getUserRoles, formatDisplayRole } from "$lib/roles";
+import { isBookingAdmin, getUserRoles, formatDisplayRole, isStudentRole } from "$lib/roles";
 import {
   resolveBookingRecipients,
   sendBookingNotificationEmail,
@@ -46,6 +46,7 @@ type CreateBookingBody = {
 
 function validateBody(
   b: any,
+  user?: any,
 ): { ok: true; data: CreateBookingBody } | { ok: false; error: string } {
   if (!b || typeof b !== "object") return { ok: false, error: "Invalid body" };
   const {
@@ -67,10 +68,13 @@ function validateBody(
   ) {
     return { ok: false, error: "อีเมลอาจารย์ที่ปรึกษาไม่ถูกต้อง" };
   }
-  if (!advisorName || typeof advisorName !== "string" || !advisorName.trim()) {
-    return { ok: false, error: "กรุณาเลือกอาจารย์ที่ปรึกษา" };
+  const isStudent = isStudentRole(user);
+  if (isStudent) {
+    if (!advisorName || typeof advisorName !== "string" || !advisorName.trim()) {
+      return { ok: false, error: "กรุณาเลือกอาจารย์ที่ปรึกษา" };
+    }
   }
-  if (advisorName.length > 100) {
+  if (advisorName && typeof advisorName === "string" && advisorName.length > 100) {
     return {
       ok: false,
       error: "ชื่ออาจารย์ที่ปรึกษาต้องเป็นข้อความไม่เกิน 100 ตัวอักษร",
