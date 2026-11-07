@@ -162,6 +162,7 @@ export class BookingFlow {
       startTime: this.startTime,
       endTime: this.endTime,
       title: this.title,
+      advisorName: this.advisorName,
       isRecurring: this.isRecurring,
       recurringUntil: this.recurringUntil,
       recurringDays: this.recurringDays,

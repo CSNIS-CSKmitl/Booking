@@ -74,6 +74,7 @@ export function validateForm(fields: {
   startTime: string;
   endTime: string;
   title: string;
+  advisorName?: string;
   isRecurring: boolean;
   recurringUntil: string;
   recurringDays: number[];
@@ -84,6 +85,7 @@ export function validateForm(fields: {
     startTime,
     endTime,
     title,
+    advisorName,
     isRecurring,
     recurringUntil,
     recurringDays,
@@ -95,6 +97,7 @@ export function validateForm(fields: {
   if (!startTime || !endTime) return "กรุณาระบุเวลาเริ่มและเวลาสิ้นสุด";
   if (startTime >= endTime) return "เวลาเริ่มต้องน้อยกว่าเวลาจบ";
   if (!title.trim()) return "กรุณากรอกหัวข้อการจอง";
+  if (!advisorName || !advisorName.trim()) return "กรุณาเลือกอาจารย์ที่ปรึกษา";
   if (isRecurring) {
     if (!recurringUntil) return "กรุณาระบุวันที่สิ้นสุดการจองซ้ำ";
     if (recurringUntil < bookingDate)
