@@ -357,7 +357,7 @@
 										<Eye class="size-3 text-muted-foreground/60 shrink-0" />
 									</div>
 									{#if booking.advisorName}
-										<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}</p>
+										<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}{booking.advisorEmail ? ` (${booking.advisorEmail})` : ""}</p>
 									{/if}
 									{#if booking.detailLabel}
 										<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 max-w-md">หมายเหตุ: {booking.detailLabel}</p>
@@ -592,7 +592,7 @@
 						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
 							<GraduationCap class="size-3.5 text-indigo-600" /> อาจารย์ที่ปรึกษา
 						</span>
-						<p class="text-sm font-semibold text-foreground">{selectedBooking.advisorName || 'ไม่ระบุ'}</p>
+						<p class="text-sm font-semibold text-foreground">{selectedBooking.advisorName || 'ไม่ระบุ'}{selectedBooking.advisorEmail ? ` (${selectedBooking.advisorEmail})` : ""}</p>
 					</div>
 				</div>
 

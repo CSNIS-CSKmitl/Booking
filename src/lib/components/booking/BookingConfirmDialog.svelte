@@ -21,6 +21,7 @@
 		title,
 		notes = "",
 		advisorName = "",
+		advisorEmail = "",
 		isRecurring = false,
 		recurringUntil = "",
 		recurringDaysText = "",
@@ -38,6 +39,7 @@
 		title: string;
 		notes?: string;
 		advisorName?: string;
+		advisorEmail?: string;
 		isRecurring?: boolean;
 		recurringUntil?: string;
 		recurringDaysText?: string;
@@ -204,7 +206,7 @@
 			{#if advisorName.trim()}
 				<div class="text-sm text-foreground break-words">
 					<p class="text-xs text-muted-foreground">อาจารย์ที่ปรึกษา</p>
-					<p>{advisorName}</p>
+					<p class="font-medium">{advisorName}{advisorEmail ? ` (${advisorEmail})` : ""}</p>
 				</div>
 			{/if}
 			{#if notes}

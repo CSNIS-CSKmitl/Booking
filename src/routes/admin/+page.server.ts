@@ -62,6 +62,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       bookerEmail: b.bookerEmail ?? "",
       detailLabel: b.detailLabel ?? "",
       advisorName: b.advisorName ?? "",
+      advisorEmail: b.advisorEmail ?? "",
       createdBy:
         b.expand?.created_by?.name ??
         b.expand?.created_by?.email ??

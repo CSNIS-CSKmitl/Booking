@@ -21,6 +21,7 @@ export interface StatsBookingInput {
   status?: string;
   bookerName?: string;
   advisorName?: string;
+  advisorEmail?: string;
   detailLabel?: string;
   bookerEmail?: string;
   booker_email?: string;
