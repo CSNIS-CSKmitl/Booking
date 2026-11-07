@@ -10,6 +10,8 @@
 		stats: Partial<ComputedBookingStats> & {
 			total: number;
 			upcoming: number;
+			ongoing?: number;
+			completed?: number;
 			month: number;
 			bookers: number;
 			cancelled: number;
@@ -236,14 +238,14 @@
 
 			<button
 				type="button"
-				class="rounded-xl border p-4 text-left transition hover:shadow-xs {activeFilter === 'active'
-					? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
-					: 'border-border bg-card hover:border-emerald-300'}"
-				onclick={() => toggleFilter('active')}
+				class="rounded-xl border p-4 text-left transition hover:shadow-xs {activeFilter === 'completed'
+					? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20'
+					: 'border-border bg-card hover:border-indigo-300'}"
+				onclick={() => toggleFilter('completed')}
 			>
-				<p class="text-xs text-muted-foreground">การจองที่ใช้งาน</p>
-				<p class="mt-2 text-2xl font-bold text-emerald-700">{stats.total.toLocaleString()}</p>
-				<p class="mt-1 text-[11px] text-muted-foreground">ผู้จอง {stats.bookers.toLocaleString()} คน</p>
+				<p class="text-xs text-muted-foreground">สิ้นสุดแล้ว</p>
+				<p class="mt-2 text-2xl font-bold text-indigo-700">{(stats.completed ?? 0).toLocaleString()}</p>
+				<p class="mt-1 text-[11px] text-muted-foreground">คลิกเพื่อดูรายการที่ผ่านพ้นไปแล้ว</p>
 			</button>
 
 			<button

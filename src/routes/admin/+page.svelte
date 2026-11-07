@@ -7,6 +7,7 @@
 		computeBookingStats,
 		filterBookingsByDrilldown,
 		parseBookingDate,
+		formatBookingDateTimeRange,
 		filterBookingsByTimeRange,
 		type BookingDrilldownFilter,
 		type BookingTimeRange
@@ -203,7 +204,16 @@
 		}
 		await handleRefresh();
 	}
+
+	function handleGlobalKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			detailDialogOpen = false;
+			editDialogOpen = false;
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleGlobalKeydown} />
 
 <svelte:head><title>จัดการการจอง | Booking Admin</title></svelte:head>
 <div class="min-h-screen bg-background px-4 py-6 text-foreground md:px-8">
@@ -347,7 +357,7 @@
 				<div class="flex flex-wrap items-center gap-1.5">
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'all'
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition {activeFilter === 'all'
 							? 'bg-slate-800 text-white'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'all')}
@@ -356,26 +366,37 @@
 					</button>
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'active'
-							? 'bg-emerald-600 text-white'
-							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
-						onclick={() => (activeFilter = 'active')}
-					>
-						กำลังใช้งาน ({computedStats.active})
-					</button>
-					<button
-						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'upcoming'
-							? 'bg-amber-600 text-white'
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition {activeFilter === 'upcoming'
+							? 'bg-amber-600 text-white ring-2 ring-amber-500/20'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'upcoming')}
 					>
 						กำลังจะมาถึง ({computedStats.upcoming})
 					</button>
+					{#if computedStats.ongoing > 0}
+						<button
+							type="button"
+							class="rounded-lg px-3 py-1.5 text-xs font-semibold transition {activeFilter === 'ongoing'
+								? 'bg-emerald-600 text-white ring-2 ring-emerald-500/20'
+								: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}"
+							onclick={() => (activeFilter = 'ongoing')}
+						>
+							กำลังใช้งาน ({computedStats.ongoing})
+						</button>
+					{/if}
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'cancelled'
-							? 'bg-rose-600 text-white'
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition {activeFilter === 'completed'
+							? 'bg-indigo-600 text-white ring-2 ring-indigo-500/20'
+							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
+						onclick={() => (activeFilter = 'completed')}
+					>
+						สิ้นสุดแล้ว ({computedStats.completed})
+					</button>
+					<button
+						type="button"
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition {activeFilter === 'cancelled'
+							? 'bg-rose-600 text-white ring-2 ring-rose-500/20'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'cancelled')}
 					>
@@ -410,6 +431,7 @@
 					<tbody>
 						{#each filteredBookings as booking (booking.id)}
 							{@const isPast = isBookingPast(booking)}
+							{@const dt = formatBookingDateTimeRange(booking.start_time, booking.end_time)}
 							<tr 
 								class="border-b border-border/60 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
 								onclick={() => openBookingDetail(booking)}
@@ -430,8 +452,10 @@
 								<td class="px-4 py-3">
 									{booking.roomName}{booking.location ? ` (${booking.location})` : ''}
 								</td>
-								<td class="px-4 py-3 whitespace-nowrap text-muted-foreground">
-									{displayDate(booking.start_time)}<br />ถึง {displayDate(booking.end_time)}
+								<td class="px-4 py-3 whitespace-nowrap">
+									<span class="font-medium text-foreground">{dt.dateStr}</span>
+									<br />
+									<span class="text-xs text-muted-foreground">{dt.timeStr}</span>
 								</td>
 								<td class="px-4 py-3">
 									{booking.bookerName || '-'}<br />
@@ -583,6 +607,7 @@
 	<Dialog.Content class="sm:max-w-[560px] bg-card border border-border rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
 		{#if selectedBooking}
 			{@const isPast = isBookingPast(selectedBooking)}
+			{@const mdt = formatBookingDateTimeRange(selectedBooking.start_time, selectedBooking.end_time)}
 			<Dialog.Header class="space-y-2 pb-3 border-b border-border">
 				<div class="flex items-center justify-between gap-2">
 					<span
@@ -640,7 +665,7 @@
 							<CalendarDays class="size-3.5 text-indigo-600" /> วันและเวลา
 						</span>
 						<p class="text-xs font-semibold text-foreground leading-snug">
-							{displayDate(selectedBooking.start_time)}<br />ถึง {displayDate(selectedBooking.end_time)}
+							{mdt.fullStr}
 						</p>
 					</div>
 

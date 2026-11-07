@@ -1,7 +1,13 @@
 export type BookingTimeRange = "today" | "7d" | "month" | "year" | "all";
 
 export type BookingDrilldownFilter =
-  "all" | "active" | "upcoming" | "cancelled" | `room:${string}`;
+  | "all"
+  | "active"
+  | "ongoing"
+  | "upcoming"
+  | "completed"
+  | "cancelled"
+  | `room:${string}`;
 
 export interface StatsRoomInput {
   id: string;
@@ -58,7 +64,9 @@ export interface ComputedBookingStats {
   totalBookings: number;
   total: number; // active (non-cancelled) bookings in range
   active: number;
+  ongoing: number;
   upcoming: number;
+  completed: number;
   month: number;
   cancelled: number;
   bookers: number;
@@ -197,6 +205,81 @@ export function isBookingUpcoming(
   return start.getTime() >= ref.getTime();
 }
 
+export function isBookingOngoing(
+  booking: StatsBookingInput,
+  now: Date = new Date(),
+): boolean {
+  if (!booking || booking.status === "cancelled") return false;
+  const start = parseBookingDate(booking.start_time);
+  const end = parseBookingDate(booking.end_time);
+  if (!start) return false;
+  const ref = parseBookingDate(now) ?? new Date();
+  const endMs = end ? end.getTime() : start.getTime();
+  return start.getTime() <= ref.getTime() && endMs >= ref.getTime();
+}
+
+export function isBookingCompleted(
+  booking: StatsBookingInput,
+  now: Date = new Date(),
+): boolean {
+  if (!booking || booking.status === "cancelled") return false;
+  const end = parseBookingDate(booking.end_time) ?? parseBookingDate(booking.start_time);
+  if (!end) return false;
+  const ref = parseBookingDate(now) ?? new Date();
+  return end.getTime() < ref.getTime();
+}
+
+export function formatBookingDateTimeRange(
+  startTime?: unknown,
+  endTime?: unknown,
+): { dateStr: string; timeStr: string; fullStr: string } {
+  const start = parseBookingDate(startTime);
+  const end = parseBookingDate(endTime);
+  if (!start) return { dateStr: "-", timeStr: "-", fullStr: "-" };
+
+  const startDay = start.toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const startTimeStr = start.toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (!end) {
+    return {
+      dateStr: startDay,
+      timeStr: `${startTimeStr} น.`,
+      fullStr: `${startDay} ${startTimeStr} น.`,
+    };
+  }
+
+  const endDay = end.toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const endTimeStr = end.toLocaleTimeString("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (startDay === endDay) {
+    return {
+      dateStr: startDay,
+      timeStr: `${startTimeStr} - ${endTimeStr} น.`,
+      fullStr: `${startDay} ${startTimeStr} - ${endTimeStr} น.`,
+    };
+  }
+
+  return {
+    dateStr: `${startDay} - ${endDay}`,
+    timeStr: `${startTimeStr} - ${endTimeStr} น.`,
+    fullStr: `${startDay} ${startTimeStr} น. ถึง ${endDay} ${endTimeStr} น.`,
+  };
+}
+
 export function filterBookingsByDrilldown<T extends StatsBookingInput>(
   bookings: T[] = [],
   filter: BookingDrilldownFilter = "all",
@@ -207,8 +290,14 @@ export function filterBookingsByDrilldown<T extends StatsBookingInput>(
   if (filter === "active") {
     return bookings.filter((b) => b.status !== "cancelled");
   }
+  if (filter === "ongoing") {
+    return bookings.filter((b) => isBookingOngoing(b, now));
+  }
   if (filter === "upcoming") {
     return bookings.filter((b) => isBookingUpcoming(b, now));
+  }
+  if (filter === "completed") {
+    return bookings.filter((b) => isBookingCompleted(b, now));
   }
   if (filter === "cancelled") {
     return bookings.filter((b) => b.status === "cancelled");
@@ -440,9 +529,9 @@ export function computeBookingStats({
   const cancelledBookings = filtered.filter(
     (b) => b && b.status === "cancelled",
   );
-  const upcomingBookings = activeBookings.filter((b) =>
-    isBookingUpcoming(b, ref),
-  );
+  const ongoingBookings = activeBookings.filter((b) => isBookingOngoing(b, ref));
+  const upcomingBookings = activeBookings.filter((b) => isBookingUpcoming(b, ref));
+  const completedBookings = activeBookings.filter((b) => isBookingCompleted(b, ref));
 
   const currentMonthPrefix = `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}`;
   const monthBookings = safeBookings.filter(
@@ -512,7 +601,9 @@ export function computeBookingStats({
     totalBookings: filtered.length,
     total: activeBookings.length,
     active: activeBookings.length,
+    ongoing: ongoingBookings.length,
     upcoming: upcomingBookings.length,
+    completed: completedBookings.length,
     month: monthBookings.length,
     cancelled: cancelledBookings.length,
     bookers: bookers.size,
