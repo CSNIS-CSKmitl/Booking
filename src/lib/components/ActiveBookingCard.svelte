@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { Clock, Users, ShieldAlert, CheckCircle2 } from '@lucide/svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
@@ -137,7 +137,7 @@
 	</Card.Header>
 
 	<Card.Content class="p-0 pt-4 space-y-1.5">
-		<div class="text-muted-foreground flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+		<div class="text-muted-foreground flex items-center justify-between text-[10px] font-bold">
 			<span class="flex items-center gap-1">
 				{#if bookingViewState === 'idle'}
 					<CheckCircle2 class="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500" />
@@ -150,7 +150,7 @@
 		</div>
 		<div class="relative w-full bg-muted dark:bg-background rounded-full h-1.5 overflow-hidden border border-border/40">
 			<div
-				class={cn("h-full rounded-full transition-all duration-300", themeStyles.progressBarColor)}
+				class={cn("h-full rounded-full transition-colors duration-300", themeStyles.progressBarColor)}
 				style="width: {progressPercent}%"
 			></div>
 		</div>

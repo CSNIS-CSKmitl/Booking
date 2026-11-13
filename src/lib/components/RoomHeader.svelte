@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import AdminLink from './AdminLink.svelte';
 	interface Props {
 		roomName?: string;
@@ -26,7 +26,7 @@
 </script>
 
 <header
-	class="border-border flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b pb-4 pt-2 transition-all duration-300"
+	class="border-border flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b pb-4 pt-2 transition-colors duration-300"
 >
 	<!-- Left section: Room details -->
 	<div class="space-y-1">
@@ -55,7 +55,7 @@
 		>
 			{clockText}
 		</div>
-		<div class="mt-1 text-[10px] md:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+		<div class="mt-1 text-[10px] md:text-xs font-semibold text-muted-foreground">
 			{dateText}
 		</div>
 	</div>

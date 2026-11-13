@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import AdminLink from '../AdminLink.svelte';
 	let {
 		displayMonthName,
@@ -38,7 +38,7 @@
 			{clockText}
 		</div>
 		<div
-			class="text-foreground/45 text-[10px] md:text-xs font-semibold uppercase tracking-wider mt-0.5"
+			class="text-foreground/45 text-[10px] md:text-xs font-semibold mt-0.5"
 		>
 			{dateText}
 		</div>

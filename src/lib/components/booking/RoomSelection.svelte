@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Card from "$lib/components/ui/card";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Loader2, MapPin, Check, Users, DoorOpen } from "@lucide/svelte";
@@ -69,7 +69,7 @@
 						type="button"
 						onclick={() => onSelectRoom(room.id)}
 						class={cn(
-							"group relative rounded-xl border p-3.5 text-left transition-all duration-200 flex items-stretch gap-3.5 cursor-pointer overflow-hidden",
+							"group relative rounded-xl border p-3.5 text-left transition-colors duration-200 flex items-stretch gap-3.5 cursor-pointer overflow-hidden",
 							selectedRoomId === room.id
 								? "border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30 ring-2 ring-indigo-600/20 shadow-xs"
 								: "border-border bg-card hover:border-indigo-300 dark:hover:border-indigo-800 hover:bg-accent/40"

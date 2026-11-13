@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Card from "$lib/components/ui/card";
 	import { Label } from "$lib/components/ui/label";
 	import { Input } from "$lib/components/ui/input";
@@ -110,7 +110,7 @@
 							class="sr-only peer"
 						/>
 						<div
-							class="relative w-9 h-5 bg-muted peer-focus:outline-none dark:bg-muted rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-border peer-checked:bg-indigo-600"
+							class="relative w-9 h-5 bg-muted peer-focus:outline-none dark:bg-muted rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-4 after:w-4 after:transition-colors dark:border-border peer-checked:bg-indigo-600"
 						></div>
 					</div>
 					<div class="flex flex-col">
@@ -221,7 +221,7 @@
 										type="button"
 										onclick={() => onToggleDay(d.val)}
 										class={cn(
-											"h-10 px-3.5 rounded-lg border text-xs font-bold transition-all duration-200 cursor-pointer select-none",
+											"h-10 px-3.5 rounded-lg border text-xs font-bold transition-colors duration-200 cursor-pointer select-none",
 											recurringDays.includes(d.val)
 												? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-500/20"
 												: "bg-background border-border text-muted-foreground hover:bg-accent"

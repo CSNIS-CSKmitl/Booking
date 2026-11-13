@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils.js';
 
@@ -6,6 +6,6 @@
 </script>
 
 <div
-	class={cn('bg-muted animate-pulse rounded-md', className)}
+	class={cn('bg-muted rounded-md', className)}
 	{...restProps}
 ></div>

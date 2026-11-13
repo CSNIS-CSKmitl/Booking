@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Select from "$lib/components/ui/select";
 	import { Button } from "$lib/components/ui/button";
 	import { CalendarPlus } from "@lucide/svelte";
@@ -95,7 +95,7 @@
 				&lt;
 			</Button>
 			<span
-				class="text-xs font-bold min-w-[130px] text-center text-foreground/80 font-['Prompt',sans-serif] uppercase tracking-wider"
+				class="text-xs font-bold min-w-[130px] text-center text-foreground/80 font-['Prompt',sans-serif]"
 			>
 				{monthNames[selectedMonth]}
 				{selectedYear + 543}

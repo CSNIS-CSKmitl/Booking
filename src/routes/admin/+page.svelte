@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
 	import { Trash2, Pencil, FileText, CalendarDays, DoorOpen, User, GraduationCap, Eye, Download } from '@lucide/svelte';
@@ -220,7 +220,7 @@
 	<div class="mx-auto max-w-7xl space-y-6">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div>
-				<p class="text-xs font-bold uppercase tracking-widest text-indigo-600">Booking Admin</p>
+				<p class="text-xs font-bold text-indigo-600">Booking Admin</p>
 				<h1 class="mt-1 text-2xl font-bold">จัดการการจองห้อง</h1>
 			</div>
 			<a class="rounded-lg border border-border px-4 py-2 text-sm" href="/">กลับหน้าหลัก</a>
@@ -300,7 +300,7 @@
 				{#each data.rooms as room (room.id)}
 					{@const roomFilter = `room:${room.id}` as const}
 					<div
-						class="group relative flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-all {activeFilter === roomFilter
+						class="group relative flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-colors {activeFilter === roomFilter
 							? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20'
 							: 'border-border/70 hover:border-indigo-300 bg-card'}"
 					>

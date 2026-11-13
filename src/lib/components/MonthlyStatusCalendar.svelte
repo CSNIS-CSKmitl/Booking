@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { page } from "$app/state";
 	import * as Card from "$lib/components/ui/card";
 	import { Badge } from "$lib/components/ui/badge";
@@ -244,7 +244,7 @@
 			<div class="p-6 space-y-4 text-xs font-['Prompt',sans-serif]">
 				<div class="space-y-1">
 					<span
-						class="text-[10px] font-bold uppercase tracking-wider text-foreground/55"
+						class="text-[10px] font-bold text-foreground/55"
 						>หัวข้อการประชุม</span
 					>
 					<p class=" text-foreground text-base">
@@ -255,7 +255,7 @@
 				<div class="grid grid-cols-2 gap-4">
 					<div class="space-y-1">
 						<span
-							class="text-[10px] uppercase tracking-wider text-foreground/55"
+							class="text-[10px] text-foreground/55"
 							>เวลาการใช้งาน</span
 						>
 						<p class="text-foreground font-mono font-medium">
@@ -265,7 +265,7 @@
 
 					<div class="space-y-1">
 						<span
-							class="text-[10px] uppercase tracking-wider text-foreground/55"
+							class="text-[10px] text-foreground/55"
 							>สถานที่ / ห้อง</span
 						>
 						<p class="text-foreground font-medium">
@@ -279,7 +279,7 @@
 					class="space-y-1.5 border-t border-border/60 pt-4"
 				>
 					<span
-						class="text-[14px] uppercase tracking-wider text-foreground/55 flex items-center justify-between"
+						class="text-[14px] text-foreground/55 flex items-center justify-between"
 					>
 						<span>ผู้จองห้อง</span>
 						{#if isAdmin && !isEditing}
@@ -348,7 +348,7 @@
 						class="space-y-1 border-t border-border/60 pt-4"
 					>
 						<span
-							class="text-[10px] font-bold uppercase tracking-wider text-foreground/55"
+							class="text-[10px] font-bold text-foreground/55"
 							>รายละเอียดเพิ่มเติม</span
 						>
 						<p

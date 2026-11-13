@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import {
 		BOOKING_TIME_RANGES,
 		type BookingDrilldownFilter,
@@ -136,7 +136,7 @@
 			>
 				<span
 					class="h-1.5 w-1.5 rounded-full {isRealtime
-						? 'animate-pulse bg-emerald-500'
+						? ' bg-emerald-500'
 						: 'bg-slate-400'}"
 				></span>
 				{isRealtime ? 'Realtime' : 'Snapshot'}
@@ -392,7 +392,7 @@
 								</span>
 								<div class="flex h-28 w-full items-end justify-center rounded-t-md bg-muted/40 px-0.5">
 									<div
-										class="w-full rounded-t-sm transition-all {value > 0
+										class="w-full rounded-t-sm transition-colors {value > 0
 											? 'bg-indigo-600 group-hover:bg-indigo-700'
 											: 'bg-border'}"
 										style="height: {heightPct}%"

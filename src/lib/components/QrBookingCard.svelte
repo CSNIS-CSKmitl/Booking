@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Card from "$lib/components/ui/card";
 	import { QrCode, HelpCircle } from "@lucide/svelte";
 
@@ -39,7 +39,7 @@
 					class="text-muted-foreground grid h-36 w-36 place-items-center text-sm font-semibold"
 				>
 					<QrCode
-						class="h-8 w-8 animate-pulse text-muted-foreground"
+						class="h-8 w-8 text-muted-foreground"
 					/>
 				</div>
 			{/if}

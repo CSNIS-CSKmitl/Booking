@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Table from '$lib/components/ui/table';
 	import { Badge } from '$lib/components/ui/badge';
 
@@ -28,7 +28,7 @@
 						<Table.Cell class="p-6">
 							{#if row.isOccupied}
 								<Badge variant="destructive" class="gap-1.5">
-									<span class="bg-destructive h-1.5 w-1.5 animate-pulse rounded-full"></span>
+									<span class="bg-destructive h-1.5 w-1.5 rounded-full"></span>
 									กำลังใช้งาน
 								</Badge>
 							{:else}
@@ -54,7 +54,7 @@
 				{/each}
 			{:else}
 				<Table.Row>
-					<Table.Cell colspan={5} class="text-muted-foreground animate-pulse p-16 text-center">
+					<Table.Cell colspan={5} class="text-muted-foreground p-16 text-center">
 						กำลังดึงข้อมูลระบบห้องประชุมเรียลไทม์...
 					</Table.Cell>
 				</Table.Row>

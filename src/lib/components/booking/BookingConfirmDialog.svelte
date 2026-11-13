@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Card from "$lib/components/ui/card";
 	import { Button } from "$lib/components/ui/button";
@@ -103,7 +103,7 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<p
-						class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+						class="text-[10px] font-semibold text-muted-foreground"
 					>
 						ห้องเรียน / ห้องประชุม
 					</p>
@@ -126,7 +126,7 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<p
-						class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+						class="text-[10px] font-semibold text-muted-foreground"
 					>
 						วันและเวลา
 					</p>
@@ -145,7 +145,7 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<p
-						class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+						class="text-[10px] font-semibold text-muted-foreground"
 					>
 						หัวข้อการจอง
 					</p>
@@ -165,7 +165,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p
-							class="text-xs text-muted-foreground uppercase tracking-wider"
+							class="text-xs text-muted-foreground"
 						>
 							ผู้จอง
 						</p>
@@ -186,7 +186,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p
-							class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+							class="text-[10px] font-semibold text-muted-foreground"
 						>
 							การจองซ้ำ (Weekly)
 						</p>
@@ -218,7 +218,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p
-							class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+							class="text-xs font-semibold text-muted-foreground"
 						>
 							รายละเอียดเพิ่มเติม
 						</p>
@@ -293,7 +293,7 @@
 			<Button
 				onclick={handleConfirm}
 				disabled={submitting || !accepted}
-				class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
+				class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors"
 			>
 				{#if submitting}
 					กำลังดำเนินการ...
