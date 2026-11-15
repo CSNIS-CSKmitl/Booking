@@ -7,6 +7,7 @@ import {
   checkOverlap,
   validateForm,
   getBookingDateInBangkok,
+  getRecurringDates,
 } from "$lib/utils/booking-helpers";
 import PocketBase from "pocketbase";
 import type { Room, Booking } from "$lib/types";
@@ -142,7 +143,7 @@ export class BookingFlow {
     }
   }
 
-  async fetchBookingsForRoomDate(): Promise<Booking[]> {
+  async fetchAllBookingsForRoom(): Promise<Booking[]> {
     if (
       !this.pb ||
       !this.selectedRoomId ||
@@ -156,10 +157,7 @@ export class BookingFlow {
       sort: "start_time",
     });
     const all = data as unknown as Booking[];
-    return all.filter((b) => {
-      if (b.status === "cancelled") return false;
-      return getBookingDateInBangkok(b.start_time) === this.bookingDate;
-    });
+    return all.filter((b) => b.status !== "cancelled");
   }
 
   async handleSubmit(e: Event) {
@@ -192,20 +190,42 @@ export class BookingFlow {
 
     this.submitting = true;
     try {
-      const fresh = await this.fetchBookingsForRoomDate();
-      this.existingBookings = fresh;
-
-      const conflict = checkOverlap(
-        fresh,
-        this.bookingDate,
-        this.startTime,
-        this.endTime,
+      const allActive = await this.fetchAllBookingsForRoom();
+      this.existingBookings = allActive.filter(
+        (b) => getBookingDateInBangkok(b.start_time) === this.bookingDate,
       );
-      if (conflict) {
-        const cStart = formatDisplayTime(conflict.start_time);
-        const cEnd = formatDisplayTime(conflict.end_time);
-        this.validationError = `เวลานี้ชนกับการจอง "${conflict.title}" (${cStart}-${cEnd})`;
+
+      const datesToCheck = this.isRecurring
+        ? getRecurringDates(
+            this.bookingDate,
+            this.recurringUntil,
+            this.recurringDays,
+          )
+        : [this.bookingDate];
+
+      if (this.isRecurring && datesToCheck.length === 0) {
+        this.validationError =
+          "ไม่มีวันที่ตรงกับเงื่อนไขการจองซ้ำในช่วงเวลาที่กำหนด";
         return;
+      }
+
+      for (const date of datesToCheck) {
+        const dayBookings = allActive.filter(
+          (b) => getBookingDateInBangkok(b.start_time) === date,
+        );
+        const conflict = checkOverlap(
+          dayBookings,
+          date,
+          this.startTime,
+          this.endTime,
+        );
+        if (conflict) {
+          const cStart = formatDisplayTime(conflict.start_time);
+          const cEnd = formatDisplayTime(conflict.end_time);
+          const datePrefix = this.isRecurring ? `วันที่ ${date} ` : "";
+          this.validationError = `${datePrefix}เวลานี้ชนกับการจอง "${conflict.title}" (${cStart}-${cEnd})`;
+          return;
+        }
       }
 
       this.showConfirm = true;
@@ -259,8 +279,8 @@ export class BookingFlow {
       this.isRecurring = false;
       this.recurringUntil = "";
       this.customBookerName = "";
-      toast.success("ส่งคำขอจองเรียบร้อย", {
-        description: "รอผู้ดูแลอนุมัติ",
+      toast.success("จองห้องเรียบร้อยแล้ว", {
+        description: "บันทึกการจองและอนุมัติอัตโนมัติเรียบร้อย",
       });
 
       this.showConfirm = false;

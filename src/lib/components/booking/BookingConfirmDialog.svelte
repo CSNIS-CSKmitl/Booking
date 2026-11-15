@@ -108,11 +108,10 @@
 						ห้องเรียน / ห้องประชุม
 					</p>
 					<p class="text-sm font-semibold text-foreground truncate">
-						{roomName || "ยังไม่ได้เลือกห้อง"} ,
-						<span
-							class="text-xs font-semibold text-muted-foreground"
-							>({roomLocation})</span
-						>
+						{roomName || "ยังไม่ได้เลือกห้อง"}
+						{#if roomLocation}
+							, <span class="text-xs font-semibold text-muted-foreground">({roomLocation})</span>
+						{/if}
 					</p>
 				</div>
 			</div>

@@ -111,3 +111,34 @@ export function validateForm(fields: {
   }
   return null;
 }
+
+/** สร้างรายการวันที่ทั้งหมดสำหรับการจองซ้ำรายสัปดาห์ (YYYY-MM-DD) */
+export function getRecurringDates(
+  startDate: string,
+  untilDate: string,
+  recurringDays: number[],
+): string[] {
+  const dates: string[] = [];
+  const targetDays =
+    Array.isArray(recurringDays) && recurringDays.length > 0
+      ? recurringDays
+      : [new Date(`${startDate}T00:00:00`).getDay()];
+
+  const current = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${untilDate}T00:00:00`);
+  if (Number.isNaN(current.getTime()) || Number.isNaN(end.getTime())) {
+    return dates;
+  }
+
+  while (current <= end) {
+    if (targetDays.includes(current.getDay())) {
+      const yyyy = current.getFullYear();
+      const mm = String(current.getMonth() + 1).padStart(2, "0");
+      const dd = String(current.getDate()).padStart(2, "0");
+      dates.push(`${yyyy}-${mm}-${dd}`);
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+}

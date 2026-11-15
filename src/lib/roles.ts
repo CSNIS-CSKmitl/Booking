@@ -162,10 +162,12 @@ export function getAdvisorFieldMode(user: any): AdvisorFieldMode {
   if (!user) return "hidden";
   const roles = getUserRoles(user);
 
-  // 1. เจ้าหน้าที่ (Staff) และ แอดมิน (Super Admin) -> ใส่ชื่อเองได้
-  const isSuperAdminOrStaff = roles.some((r) =>
-    ["super_admin", "superadmin", "staff", "stuff"].includes(r),
-  );
+  // 1. เจ้าหน้าที่ (Staff) และ แอดมิน (Super Admin) -> ใส่ชื่อเองได้ (ไม่บังคับ)
+  const isSuperAdminOrStaff =
+    user.email === "log@cskmitl.com" ||
+    roles.some((r) =>
+      ["super_admin", "superadmin", "staff", "stuff"].includes(r),
+    );
   if (isSuperAdminOrStaff) {
     return "allow_custom";
   }

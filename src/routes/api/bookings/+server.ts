@@ -160,7 +160,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   // แกะตรวจสอบฟอร์มข้อมูลที่ยิงมาหน้าเบราว์เซอร์
   const body = await request.json().catch(() => null);
-  const result = validateBody(body);
+  const result = validateBody(body, locals.user);
   if (!result.ok) {
     throw error(400, result.error);
   }

@@ -122,6 +122,8 @@ async function fetchFreshUserFromPb(email: string): Promise<AuthUser | null> {
           name: "Administrator",
           username: "admin",
           user_type: "000000000000009",
+          roles: ["superadmin", "super_admin"],
+          isAdmin: true,
         };
       }
     } catch {
@@ -182,6 +184,8 @@ export const handle: Handle = async ({ event, resolve }) => {
       name: model.name ?? "",
       username: model.username,
       user_type: model.user_type ?? "",
+      roles: getUserRoles(model),
+      isAdmin: isBookingAdmin(model, PB_ADMIN_EMAIL),
     };
   }
 

@@ -20,15 +20,15 @@
 			<Card.Title
 				class="text-xl font-bold tracking-tight text-foreground"
 			>
-				ส่งคำขอจองห้องประชุมแล้ว
+				จองห้องประชุมสำเร็จ
 			</Card.Title>
 			<Card.Description
 				class="text-muted-foreground text-sm"
 			>
-				ส่งคำขอสำเร็จแล้ว สถานะของรายการจะเป็น <span
-					class="text-indigo-600 dark:text-indigo-400 font-semibold"
+				บันทึกการจองสำเร็จแล้ว สถานะของรายการคือ <span
+					class="text-emerald-600 dark:text-emerald-400 font-semibold"
 					>approved</span
-				> เมื่อได้รับการตรวจสอบและยืนยันจากผู้ดูแลระบบ
+				> พร้อมใช้งานตามวันและเวลาที่เลือก
 			</Card.Description>
 		</Card.Header>
 		<div class="flex gap-3 mt-1">
@@ -40,7 +40,7 @@
 				จองรายการอื่นเพิ่มเติม
 			</Button>
 			<Button
-				href="/book"
+				href="/"
 				class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg"
 			>
 				กลับหน้าหลัก

@@ -216,6 +216,7 @@
 		title={flow.title}
 		notes={flow.notes}
 		advisorName={flow.advisorName}
+		advisorEmail={flow.advisorEmail}
 		isRecurring={flow.isRecurring}
 		recurringUntil={flow.recurringUntil}
 		recurringDaysText={flow.recurringDaysText}
