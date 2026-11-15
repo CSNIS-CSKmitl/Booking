@@ -153,19 +153,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   const model = parsed?.model;
   if (!token || !model?.id || !model.email) return resolve(event);
 
-  // 1) ตรวจ JWT structure + exp
-  //    - structure valid → PB เซ็น token จริง
-  //    - exp ยังไม่หมด → token ใช้ได้
-  //    ✅ ไม่ check model.id === payload.id เพราะ PB impersonate token
-  //       บางเวอร์ชัน payload.id ไม่ตรงกับ user record id (เช่น เป็น collection id)
-  //       แต่ JWT signature ของ PB verify ได้ → auth จริง
-  const payload = decodeJwtPayload(token);
-  if (!payload) return resolve(event);
-  if (typeof payload.exp === "number" && payload.exp * 1000 <= Date.now()) {
-    return resolve(event);
-  }
-
-  // 3) cache
+  // 1) ตรวจ token กับ PocketBase จริง (cache 1 นาที) — ห้ามเชื่อ cookie model โดยไม่ verify
   const cached = userCache.get(token);
   if (cached && cached.expires > Date.now()) {
     event.locals.user = cached.user;
@@ -173,20 +161,53 @@ export const handle: Handle = async ({ event, resolve }) => {
     return response;
   }
 
-  // 4) ลองดึงจาก database เสมอเพื่อความอัปเดตของ Role/ข้อมูลผู้ใช้
-  let user: AuthUser | null = await fetchFreshUserFromPb(model.email);
+  let user: AuthUser | null = null;
+  if (PB_URL) {
+    try {
+      const pbVerify = new PocketBase(PB_URL);
+      pbVerify.autoCancellation(false);
+      pbVerify.authStore.save(token, null);
+      const refreshed = await pbVerify
+        .collection("users")
+        .authRefresh({ expand: "user_type" });
+      if (refreshed?.record?.id && refreshed?.record?.email) {
+        const fresh = refreshed.record;
+        user = {
+          id: fresh.id,
+          email: fresh.email,
+          name: fresh.name ?? "",
+          username: fresh.username,
+          user_type: fresh.user_type ?? "",
+          roles: getUserRoles(fresh),
+          isAdmin: isBookingAdmin(fresh, PB_ADMIN_EMAIL),
+        };
+      }
+    } catch {
+      // ลองตรวจ legacy admin token เฉพาะกรณี admin
+      try {
+        const pbVerify = new PocketBase(PB_URL);
+        pbVerify.autoCancellation(false);
+        pbVerify.authStore.save(token, null);
+        const adminRefreshed = await pbVerify.admins.authRefresh();
+        if (adminRefreshed?.record?.id && adminRefreshed?.record?.email) {
+          user = {
+            id: adminRefreshed.record.id,
+            email: adminRefreshed.record.email,
+            name: "Administrator",
+            username: "admin",
+            user_type: "000000000000009",
+            roles: ["superadmin", "super_admin"],
+            isAdmin: true,
+          };
+        }
+      } catch {
+        user = null;
+      }
+    }
+  }
 
-  // ถ้าดึงไม่ได้ (เช่น DB ล่ม) ให้ใช้ข้อมูลจาก Cookie เป็น Fallback
   if (!user) {
-    user = {
-      id: model.id,
-      email: model.email,
-      name: model.name ?? "",
-      username: model.username,
-      user_type: model.user_type ?? "",
-      roles: getUserRoles(model),
-      isAdmin: isBookingAdmin(model, PB_ADMIN_EMAIL),
-    };
+    return resolve(event);
   }
 
   event.locals.user = user;

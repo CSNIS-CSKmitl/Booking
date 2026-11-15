@@ -40,8 +40,10 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
       sameSite: "lax",
     });
 
-    // Keep track of where to redirect after successful login
-    const next = url.searchParams.get("redirect") || "/book";
+    // Keep track of where to redirect after successful login (safe relative path only)
+    const rawNext = url.searchParams.get("redirect") || "/book";
+    const next =
+      rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/book";
     cookies.set("pb_oauth_next", next, {
       path: "/",
       httpOnly: true,

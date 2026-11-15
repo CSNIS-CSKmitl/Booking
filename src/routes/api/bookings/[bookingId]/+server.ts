@@ -1,8 +1,9 @@
 import { isBookingAdmin } from "$lib/roles";
-import { json, error } from "@sveltejs/kit";
+import { json, error, isHttpError } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import PocketBase from "pocketbase";
 import { env } from "$env/dynamic/private";
+import { writeAdminAction } from "$lib/server/audit-log";
 
 const PB_URL = env.POCKETBASE_URL ?? env.PUBLIC_POCKETBASE_URL ?? "";
 const PB_ADMIN_EMAIL = env.PB_ADMIN_EMAIL || "";
@@ -38,9 +39,19 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
     // 3. Perform updates
     const updates: Record<string, any> = {};
-    if (body.title !== undefined) updates.title = String(body.title).trim();
-    if (body.detailLabel !== undefined)
-      updates.detailLabel = String(body.detailLabel).trim();
+    if (body.title !== undefined) {
+      const trimmedTitle = String(body.title).trim();
+      if (!trimmedTitle) throw error(400, "กรุณากรอกหัวข้อการจอง");
+      if (trimmedTitle.length > 200)
+        throw error(400, "หัวข้อยาวเกิน 200 ตัวอักษร");
+      updates.title = trimmedTitle;
+    }
+    if (body.detailLabel !== undefined) {
+      const trimmedDetail = String(body.detailLabel).trim();
+      if (trimmedDetail.length > 500)
+        throw error(400, "รายละเอียดยาวเกิน 500 ตัวอักษร");
+      updates.detailLabel = trimmedDetail;
+    }
 
     if (body.bookerName !== undefined) {
       if (!isAdmin)
@@ -48,11 +59,16 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
       updates.bookerName = String(body.bookerName).trim();
     }
 
+    if (Object.keys(updates).length === 0) {
+      throw error(400, "ไม่มีข้อมูลที่ต้องการแก้ไข");
+    }
+
     const updated = await pb
       .collection("bookings")
       .update(bookingId, { ...updates, updated_by: locals.user.id });
     return json({ success: true, booking: updated });
   } catch (err: any) {
+    if (isHttpError(err)) throw err;
     console.error("PATCH Booking Error:", err);
     throw error(
       err.status || 500,
@@ -91,8 +107,18 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     const updated = await pb
       .collection("bookings")
       .update(bookingId, { status: "cancelled", updated_by: locals.user.id });
+    if (isAdmin) {
+      await writeAdminAction({
+        actorId: locals.user.id,
+        action: "cancel",
+        targetId: bookingId,
+        targetLabel: booking.title ?? "",
+        metadata: { via: "api" },
+      });
+    }
     return json({ success: true, booking: updated });
   } catch (err: any) {
+    if (isHttpError(err)) throw err;
     console.error("DELETE Booking Error:", err);
     throw error(err.status || 500, err.message || "ไม่สามารถยกเลิกการจองได้");
   } finally {

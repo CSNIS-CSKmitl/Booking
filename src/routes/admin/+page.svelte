@@ -104,7 +104,12 @@
 			}
 			body.set('image_url', editingRoom.image_url);
 
-			await fetch('?/updateRoom', { method: 'POST', body });
+			const res = await fetch('?/updateRoom', { method: 'POST', body });
+			const result = await res.json().catch(() => null);
+			if (!res.ok || result?.type === 'failure') {
+				alert(result?.data?.message || 'บันทึกข้อมูลห้องไม่สำเร็จ');
+				return;
+			}
 			editDialogOpen = false;
 			editingRoom = null;
 			await handleRefresh();
@@ -116,7 +121,12 @@
 		if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "${name}"?\nการกระทำนี้จะลบห้องออกจากระบบและไม่สามารถย้อนกลับได้`)) return;
 		const body = new FormData();
 		body.set('roomId', id);
-		await fetch('?/deleteRoom', { method: 'POST', body });
+		const res = await fetch('?/deleteRoom', { method: 'POST', body });
+		const result = await res.json().catch(() => null);
+		if (!res.ok || result?.type === 'failure') {
+			alert(result?.data?.message || 'ลบห้องไม่สำเร็จ');
+			return;
+		}
 		if (activeFilter === `room:${id}`) {
 			activeFilter = 'all';
 		}
@@ -198,7 +208,12 @@
 		if (!confirm('ยืนยันยกเลิกการจองนี้หรือไม่')) return;
 		const body = new FormData();
 		body.set('bookingId', id);
-		await fetch('?/cancel', { method: 'POST', body });
+		const res = await fetch('?/cancel', { method: 'POST', body });
+		const result = await res.json().catch(() => null);
+		if (!res.ok || result?.type === 'failure') {
+			alert(result?.data?.message || 'ยกเลิกการจองไม่สำเร็จ');
+			return;
+		}
 		if (detailDialogOpen && selectedBooking?.id === id) {
 			detailDialogOpen = false;
 		}

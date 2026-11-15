@@ -12,7 +12,26 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     return json({ ok: false, error: "invalid payload" }, { status: 400 });
   }
 
-  let record = payload.record;
+  const pbUrl =
+    env.POCKETBASE_URL ??
+    env.PUBLIC_POCKETBASE_URL ??
+    "http://192.168.15.14:8080";
+  const pbVerify = new PocketBase(pbUrl);
+  pbVerify.autoCancellation(false);
+  pbVerify.authStore.save(payload.token, null);
+
+  let record: any;
+  try {
+    const verified = await pbVerify
+      .collection("users")
+      .authRefresh({ expand: "user_type" });
+    if (!verified?.record?.id || verified.record.id !== payload.record.id) {
+      return json({ ok: false, error: "invalid session token" }, { status: 401 });
+    }
+    record = verified.record;
+  } catch {
+    return json({ ok: false, error: "invalid session token" }, { status: 401 });
+  }
 
   // Auto-assign the default user_type on first-time OAuth login
   const hasNoRole =

@@ -219,7 +219,7 @@ export const actions: Actions = {
           ? Math.max(0, parseInt(String(seatsVal), 10))
           : null;
       const image_url = String(form.get("image_url") ?? "").trim();
-      await pb
+      const created = await pb
         .collection("rooms")
         .create({
           name,
@@ -229,6 +229,13 @@ export const actions: Actions = {
           created_by: locals.user!.id,
           updated_by: locals.user!.id,
         });
+      await writeAdminAction({
+        actorId: locals.user!.id,
+        action: "update",
+        targetId: created.id,
+        targetLabel: name,
+        metadata: { operation: "create_room", location, seats },
+      });
       return { ok: true, message: "เพิ่มห้องเรียบร้อยแล้ว" };
     } catch (cause) {
       console.error("admin create room failed", cause);

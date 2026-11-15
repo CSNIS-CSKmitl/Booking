@@ -78,7 +78,7 @@
 						กำลังเชื่อมต่อ...
 					{:else}
 						<LogIn class="h-4 w-4" />
-						ลงชื่อเข้าใช้งานด้วย KMITL Account
+						Login with Google
 					{/if}
 				</button>
 

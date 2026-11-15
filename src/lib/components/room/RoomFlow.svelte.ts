@@ -129,8 +129,9 @@ export class RoomFlow {
     };
 
     await fetchAndSetBookings();
-    pollTimer = window.setInterval(fetchAndSetBookings, POLL_INTERVAL_MS);
-
-    (window as any).__roomPollTimer = pollTimer;
+    if (!onDestroyed()) {
+      pollTimer = window.setInterval(fetchAndSetBookings, POLL_INTERVAL_MS);
+      (window as any).__roomPollTimer = pollTimer;
+    }
   }
 }

@@ -58,11 +58,18 @@ export const GET: RequestHandler = async ({ params, url }) => {
     //   - filter cancelled ออกเท่านั้น (default)
     let filter = `field = "${safeRoomId}" && status != "cancelled"`;
     if (dateFilter) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateFilter)) {
+        throw error(400, "Invalid date parameter");
+      }
       // filter bookings ที่ทับกับวันที่กำหนด (Bangkok day boundary)
       filter += ` && start_time <= "${dateFilter}T23:59:59+07:00" && end_time >= "${dateFilter}T00:00:00+07:00"`;
     } else if (fromFilter) {
+      const safeFrom = fromFilter.replace(/"/g, "");
+      if (!/^\d{4}-\d{2}-\d{2}(T[\d:.+-Z]+)?$/.test(safeFrom)) {
+        throw error(400, "Invalid from parameter");
+      }
       // filter bookings ที่ยังไม่จบหลัง from
-      filter += ` && end_time >= "${fromFilter}"`;
+      filter += ` && end_time >= "${safeFrom}"`;
     }
     // ถ้าไม่ส่ง date/from → คืนทั้งหมด (client filter เอง)
 
@@ -71,7 +78,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
       sort: "start_time",
     });
 
-    // 🔒 Sanitize: ส่ง bookerName, bookerEmail ให้ระบบแสดงผลรายละเอียดการจอง
+    // 🔒 Sanitize: ไม่ส่ง email / PII อื่นๆ บน public endpoint
     const bookings = records.map((r) => ({
       id: r.id,
       field: r.field,
@@ -82,7 +89,6 @@ export const GET: RequestHandler = async ({ params, url }) => {
       detailLabel: r.detailLabel ?? "",
       advisorName: r.advisorName ?? "",
       bookerName: r.bookerName ?? "",
-      bookerEmail: r.bookerEmail ?? "",
     }));
 
     return json({ bookings });
