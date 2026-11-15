@@ -72,7 +72,7 @@ export async function resolveBookingRecipients(
     ["super_admin", "superadmin"].includes(r),
   );
   const isStaffOrTeacher = bookerRoles.some((r) =>
-    ["staff", "stuff", "teacher", "teachers"].includes(r),
+    ["staff", "teacher", "teachers"].includes(r),
   );
   const isHead = bookerRoles.includes("head");
 
