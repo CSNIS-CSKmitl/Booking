@@ -86,6 +86,7 @@
 		<DashboardHeader
 			displayMonthName={flow.displayMonthName}
 			currentRoomName={flow.currentRoomName}
+			currentRoom={flow.currentRoom}
 			clockText={flow.clockText}
 			dateText={flow.dateText}
 		/>

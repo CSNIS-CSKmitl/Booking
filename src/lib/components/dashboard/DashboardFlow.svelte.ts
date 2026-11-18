@@ -33,9 +33,12 @@ export class DashboardFlow {
     "ธันวาคม",
   ];
 
+  currentRoom = $derived(
+    this.rawRooms.find((r) => r.id === this.selectedRoomId),
+  );
+
   currentRoomName = $derived(
-    this.rawRooms.find((r) => r.id === this.selectedRoomId)?.name ??
-      "กำลังโหลดข้อมูลห้อง...",
+    this.currentRoom?.name ?? "กำลังโหลดข้อมูลห้อง...",
   );
 
   displayMonthName = $derived(
