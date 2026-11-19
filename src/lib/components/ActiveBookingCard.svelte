@@ -123,10 +123,12 @@
 
 			{#if bookingViewState !== 'idle'}
 				<div class="flex flex-wrap gap-x-5 gap-y-1 pt-0.5">
-					<div class="text-muted-foreground flex items-center gap-1.5 text-xs md:text-sm font-medium">
-						<Clock class="h-3.5 w-3.5" />
-						<span>{currentBooking.detailLabel}</span>
-					</div>
+					{#if currentBooking.detailLabel && currentBooking.detailLabel !== '-'}
+						<div class="text-muted-foreground flex items-center gap-1.5 text-xs md:text-sm font-medium">
+							<Clock class="h-3.5 w-3.5" />
+							<span>{currentBooking.detailLabel}</span>
+						</div>
+					{/if}
 					<div class="text-muted-foreground flex items-center gap-1.5 text-xs md:text-sm font-medium">
 						<Users class="h-3.5 w-3.5" />
 						<span>{displayBooker}</span>

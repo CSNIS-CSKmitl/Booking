@@ -84,10 +84,7 @@ export function mapRecord(record: BookingRecord): BookingItem {
       : "confirmed";
   const bookingDetail = String(record.detailLabel ?? "").trim();
   const expandedFieldName = String(record.expand?.field?.name ?? "").trim();
-  const detailLabel =
-    bookingDetail ||
-    expandedFieldName ||
-    String(record.field ?? "Unknown room");
+  const detailLabel = bookingDetail || expandedFieldName || "";
   const bookerName = String(record.bookerName ?? "").trim();
   const bookerEmail = String(
     record.bookerEmail ?? record.booker_email ?? "",
