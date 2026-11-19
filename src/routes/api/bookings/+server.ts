@@ -1,4 +1,4 @@
-import { isBookingAdmin, getUserRoles, formatDisplayRole, isStudentRole, getAdvisorFieldMode } from "$lib/roles";
+import { isBookingAdmin, getUserRoles, formatDisplayRole, isStudentRole, getAdvisorFieldMode, canBookOnBehalf } from "$lib/roles";
 import {
   resolveBookingRecipients,
   sendBookingNotificationEmail,
@@ -301,9 +301,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     );
   }
 
-  // รวมข้อมูลรายละเอียดนักศึกษาจริง ๆ ที่ได้แกะผ่านคุกกี้ระบบ
+  // รวมข้อมูลรายละเอียดผู้จองจริง ๆ ที่ได้แกะผ่านคุกกี้ระบบ
+  // ถ้า staff / super_admin / head กรอกชื่อจองแทน (customBookerName) ให้ใช้ชื่อนั้น
+  // ถ้าไม่กรอก (หรือเป็นนักศึกษา/อาจารย์) ให้ใช้ชื่อบัญชีผู้จองเอง
   let bookerName = locals.user.name || locals.user.email;
-  if (isAdmin && data.customBookerName) {
+  if (canBookOnBehalf(locals.user, PB_ADMIN_EMAIL) && data.customBookerName) {
     bookerName = data.customBookerName;
   }
   const bookerEmail = locals.user.email;

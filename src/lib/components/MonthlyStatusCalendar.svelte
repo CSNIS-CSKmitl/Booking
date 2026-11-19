@@ -184,6 +184,13 @@
 								>
 									{booking.time}
 								</p>
+								{#if booking.bookerName}
+									<p
+										class="text-foreground/60 mt-0.5 truncate text-xs leading-tight font-['Prompt',sans-serif]"
+									>
+										{booking.bookerName}
+									</p>
+								{/if}
 							</button>
 						{/each}
 						{#if day.bookings.length > 3}

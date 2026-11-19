@@ -31,6 +31,7 @@
 	const teachers = $derived(data.teachers ?? []);
 	const user = $derived(page.data.user);
 	const isAdmin = $derived(user?.isAdmin ?? false);
+	const allowCustomBooker = $derived(data.allowCustomBooker ?? isAdmin);
 	const isStudent = $derived(data.isStudent ?? false);
 	const advisorMode = $derived(data.advisorMode ?? "hidden");
 
@@ -144,7 +145,7 @@
 						bind:advisorName={flow.advisorName}
 						bind:advisorEmail={flow.advisorEmail}
 						bind:customBookerName={flow.customBookerName}
-						{isAdmin}
+						isAdmin={allowCustomBooker}
 						{advisorMode}
 						{teachers}
 					/>

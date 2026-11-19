@@ -180,3 +180,14 @@ export function getAdvisorFieldMode(user: any): AdvisorFieldMode {
   // 3. อาจารย์ (Teacher) หรือ หัวหน้าภาค (Head) หรืออื่นๆ -> ซ่อน
   return "hidden";
 }
+
+/**
+ * ตรวจสอบสิทธิ์การจองแทนผู้อื่น (กรอกชื่อผู้จองแทนได้):
+ * อนุญาตสำหรับ staff, super_admin, superadmin, head และ admin email
+ */
+export function canBookOnBehalf(user: any, adminEmail?: string): boolean {
+  if (!user) return false;
+  if (isBookingAdmin(user, adminEmail)) return true;
+  const roles = getUserRoles(user);
+  return roles.includes("staff");
+}
