@@ -350,21 +350,6 @@
 						<p class="break-words font-medium">{selectedBooking.advisorName}</p>
 					</div>
 				{/if}
-				{#if selectedBooking.detailLabel}
-					<div
-						class="space-y-1 border-t border-border/60 pt-4"
-					>
-						<span
-							class="text-[10px] font-bold text-foreground/55"
-							>รายละเอียดเพิ่มเติม</span
-						>
-						<p
-							class="text-foreground/90 whitespace-pre-wrap font-medium"
-						>
-							{selectedBooking.detailLabel}
-						</p>
-					</div>
-				{/if}
 			</div>
 
 			<!-- Modal Footer -->
