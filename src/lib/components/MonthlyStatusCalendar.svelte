@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import { page } from "$app/state";
 	import * as Card from "$lib/components/ui/card";
 	import { Badge } from "$lib/components/ui/badge";
@@ -114,7 +114,7 @@
 	>
 		{#each daysOfWeek as day}
 			<div
-				class="text-foreground/80 py-4.5 text-center text-sm font-bold tracking-wider font-['Prompt',sans-serif]"
+				class="text-foreground/80 py-4.5 text-center text-sm font-bold tracking-wider font-['IBM_Plex_Sans_Thai',sans-serif]"
 			>
 				{day}
 			</div>
@@ -175,7 +175,7 @@
 								class="w-full bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-accent border border-border/50 rounded px-2.5 py-1.5 text-left transition-colors duration-150 cursor-pointer select-none"
 							>
 								<p
-									class="truncate text-sm leading-normal text-foreground font-['Prompt',sans-serif]"
+									class="truncate text-sm leading-normal text-foreground font-['IBM_Plex_Sans_Thai',sans-serif]"
 								>
 									{booking.title}
 								</p>
@@ -186,7 +186,7 @@
 								</p>
 								{#if booking.bookerName}
 									<p
-										class="text-foreground/60 mt-0.5 truncate text-xs leading-tight font-['Prompt',sans-serif]"
+										class="text-foreground/60 mt-0.5 truncate text-xs leading-tight font-['IBM_Plex_Sans_Thai',sans-serif]"
 									>
 										{booking.bookerName}
 									</p>
@@ -234,7 +234,7 @@
 				class="px-6 py-4 border-b border-border/85 flex items-center justify-between bg-muted/50"
 			>
 				<h3
-					class="font-bold text-foreground text-sm tracking-wide uppercase font-['Prompt',sans-serif]"
+					class="font-bold text-foreground text-sm tracking-wide uppercase font-['IBM_Plex_Sans_Thai',sans-serif]"
 				>
 					รายละเอียดการจองห้อง
 				</h3>
@@ -248,7 +248,7 @@
 			</div>
 
 			<!-- Modal Body -->
-			<div class="p-6 space-y-4 text-xs font-['Prompt',sans-serif]">
+			<div class="p-6 space-y-4 text-xs font-['IBM_Plex_Sans_Thai',sans-serif]">
 				<div class="space-y-1">
 					<span
 						class="text-[10px] font-bold text-foreground/55"

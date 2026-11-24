@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import AdminLink from './AdminLink.svelte';
 	interface Props {
 		roomName?: string;
@@ -23,7 +23,7 @@
 	<!-- Left section: Room details -->
 	<div class="space-y-1">
 		<h1
-			class="text-2xl md:text-3xl font-bold tracking-tight text-foreground font-['Prompt','Inter',sans-serif]"
+			class="text-2xl md:text-3xl font-bold tracking-tight text-foreground font-['IBM_Plex_Sans_Thai','Inter',sans-serif]"
 		>
 			{roomName}
 		</h1>

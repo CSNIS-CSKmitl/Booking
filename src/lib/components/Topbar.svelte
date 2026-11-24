@@ -34,6 +34,7 @@
 				href="/book"
 				class="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground transition-opacity hover:opacity-85"
 			>
+				<img src="/logocs.png" alt="CS KMITL Logo" class="size-7 shrink-0 object-contain" />
 				<span>Booking</span>
 				<span
 					class="hidden text-xs font-normal text-muted-foreground sm:inline"

@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import { Clock, Users, ShieldAlert, CheckCircle2 } from '@lucide/svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
@@ -113,7 +113,7 @@
 		</div>
 
 		<div class="space-y-2">
-			<h2 class="text-2xl md:text-3xl leading-tight font-bold tracking-tight text-foreground font-['Prompt','Inter',sans-serif]">
+			<h2 class="text-2xl md:text-3xl leading-tight font-bold tracking-tight text-foreground font-['IBM_Plex_Sans_Thai','Inter',sans-serif]">
 				{#if bookingViewState === 'idle'}
 					<span class="text-emerald-600 dark:text-emerald-500 font-bold">ว่าง</span>
 				{:else}

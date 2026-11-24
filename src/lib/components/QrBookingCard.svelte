@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import * as Card from "$lib/components/ui/card";
 	import { QrCode, HelpCircle } from "@lucide/svelte";
 
@@ -16,7 +16,7 @@
 	>
 		<Card.Header class="flex flex-col gap-1 p-0">
 			<Card.Title
-				class="text-foreground text-base font-bold tracking-tight flex items-center justify-center gap-1.5 font-['Prompt',sans-serif]"
+				class="text-foreground text-base font-bold tracking-tight flex items-center justify-center gap-1.5 font-['IBM_Plex_Sans_Thai',sans-serif]"
 			>
 				ต้องการจองห้องนี้?
 			</Card.Title>
@@ -59,7 +59,7 @@
 		<Card.Header class="p-0 pb-1 flex flex-row items-center gap-1.5">
 			<HelpCircle class="h-3.5 w-3.5 text-muted-foreground/75" />
 			<Card.Title
-				class="text-muted-foreground text-xs font-bold tracking-wider uppercase font-['Prompt',sans-serif]"
+				class="text-muted-foreground text-xs font-bold tracking-wider uppercase font-['IBM_Plex_Sans_Thai',sans-serif]"
 			>
 				คำแนะนำเพิ่มเติม
 			</Card.Title>

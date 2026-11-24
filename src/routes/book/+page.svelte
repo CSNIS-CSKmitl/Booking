@@ -86,7 +86,7 @@
 </svelte:head>
 
 <div
-	class="bg-background text-foreground min-h-screen w-screen font-['Inter','Prompt',sans-serif] antialiased"
+	class="bg-background text-foreground min-h-screen w-screen font-['IBM_Plex_Sans_Thai','Inter',sans-serif] antialiased"
 >
 	<Topbar />
 

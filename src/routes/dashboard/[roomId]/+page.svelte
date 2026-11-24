@@ -77,7 +77,7 @@
 </svelte:head>
 
 <div
-	class="bg-background text-foreground min-h-screen w-screen font-['Inter','Prompt',sans-serif] antialiased"
+	class="bg-background text-foreground min-h-screen w-screen font-['IBM_Plex_Sans_Thai','Inter',sans-serif] antialiased"
 >
 	<div
 		class="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-6 px-6 py-6 md:px-10 md:py-8"
@@ -114,5 +114,5 @@
 </div>
 
 <style>
-	@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap");
+	@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap");
 </style>
