@@ -1,7 +1,7 @@
 import type { Room, Booking } from "$lib/types";
 
 const SAFE_ID_PATTERN = /^[a-zA-Z0-9_-]{1,64}$/;
-const CALENDAR_CELLS = 42; // 6 weeks × 7 days
+const MIN_CALENDAR_CELLS = 35; // 5 weeks × 7 days (expands to 42 only when a month spans 6 weeks)
 
 const BANGKOK_TIME_FORMAT = new Intl.DateTimeFormat("th-TH", {
   timeZone: "Asia/Bangkok",
@@ -54,7 +54,7 @@ export function formatToBangkokDate(utcTimeString: string): string {
     : "";
 }
 
-/** สร้างโครงสร้างตารางปฏิทินแบบ 42 ช่องสำหรับการแสดงผลรายเดือน */
+/** สร้างโครงสร้างตารางปฏิทินรายเดือน (เริ่มต้น 7×5 = 35 ช่อง และขยายเป็น 42 ช่องเฉพาะเดือนที่กิน 6 สัปดาห์) */
 export function generateMonthGridStructure(
   roomsList: Room[],
   bookingsList: Booking[],
@@ -63,14 +63,19 @@ export function generateMonthGridStructure(
   currentRoomId: string,
 ) {
   const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1);
+  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const startOffset = firstDayOfMonth.getDay();
+  const totalCells = Math.max(
+    MIN_CALENDAR_CELLS,
+    Math.ceil((startOffset + daysInMonth) / 7) * 7,
+  );
   const startDate = new Date(firstDayOfMonth);
   startDate.setDate(startDate.getDate() - startOffset);
 
   const daysArray: any[] = [];
   const todayStr = BANGKOK_DATE_FORMAT.format(new Date());
 
-  for (let i = 0; i < CALENDAR_CELLS; i++) {
+  for (let i = 0; i < totalCells; i++) {
     const currentLoopDate = new Date(startDate);
     currentLoopDate.setDate(startDate.getDate() + i);
 

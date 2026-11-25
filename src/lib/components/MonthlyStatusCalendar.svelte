@@ -157,9 +157,12 @@
 					{/if}
 
 					<!-- Small point when there is any booking in cell -->
-					{#if day.bookings.length > 0 && day.isCurrentMonth}
+					{#if day.bookings.length > 0}
 						<span
-							class="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400"
+							class={cn(
+								"h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400",
+								!day.isCurrentMonth && "opacity-50",
+							)}
 							title="{day.bookings.length} รายการจอง"
 						></span>
 					{/if}
@@ -167,12 +170,15 @@
 
 				<!-- Bookings Schedule List -->
 				<div class="flex flex-1 flex-col gap-1.5 overflow-hidden">
-					{#if day.isCurrentMonth && day.bookings.length > 0}
+					{#if day.bookings.length > 0}
 						{#each day.bookings.slice(0, 3) as booking (booking.id)}
 							<button
 								type="button"
 								onclick={() => openDetails(booking)}
-								class="w-full bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-accent border border-border/50 rounded px-2.5 py-1.5 text-left transition-colors duration-150 cursor-pointer select-none"
+								class={cn(
+									"w-full bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-accent border border-border/50 rounded px-2.5 py-1.5 text-left transition-all duration-150 cursor-pointer select-none",
+									!day.isCurrentMonth && "opacity-65 hover:opacity-100",
+								)}
 							>
 								<p
 									class="truncate text-sm leading-normal text-foreground font-['IBM_Plex_Sans_Thai',sans-serif]"
