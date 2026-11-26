@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { env } from '$env/dynamic/public';
-	import PocketBase from 'pocketbase';
 	import { AlertCircle, LogIn, CalendarRange, LayoutDashboard, Loader2 } from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
+	import { toast } from 'svelte-sonner';
 
 	const errorParam = page.url.searchParams.get('error');
 	let oauthLoading = $state(false);
@@ -11,9 +11,16 @@
 
 	const errorMessage = $derived(errorParam || oauthError);
 
+	onMount(() => {
+		if (errorParam) {
+			toast.error('ข้อผิดพลาดในการเข้าสู่ระบบ', { description: errorParam });
+		}
+	});
+
 	function signInWithOidc() {
 		oauthLoading = true;
 		oauthError = null;
+		toast.info('กำลังเชื่อมต่อเข้าสู่ระบบ KMITL...');
 		const next = page.url.searchParams.get('redirect') || '/book';
 		window.location.assign(`/auth/login?redirect=${encodeURIComponent(next)}`);
 	}
@@ -24,7 +31,7 @@
 </svelte:head>
 
 <div
-	class="flex min-h-[calc(100dvh-5rem)] w-screen items-center justify-center bg-background font-['Inter','Prompt',sans-serif] antialiased transition-colors duration-300"
+	class="flex min-h-[calc(100dvh-5rem)] w-full items-center justify-center bg-background font-['Inter','Prompt',sans-serif] antialiased transition-colors duration-300"
 >
 	<!-- Simple Clean Card Container -->
 	<div

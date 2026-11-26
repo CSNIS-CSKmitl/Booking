@@ -51,7 +51,7 @@
 	<div class="flex flex-col items-start md:items-end text-foreground font-sans">
 		<AdminLink />
 		<div
-			class="font-mono text-2xl md:text-3.5xl font-semibold tracking-tight text-foreground leading-none"
+			class="font-mono text-2xl md:text-3xl font-semibold tracking-tight text-foreground leading-none"
 		>
 			{clockText}
 		</div>

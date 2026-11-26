@@ -28,9 +28,10 @@
 	interface Props {
 		calendarDays?: CalendarDay[];
 		isAdmin?: boolean;
+		loading?: boolean;
 	}
 
-	let { calendarDays = [], isAdmin = false }: Props = $props();
+	let { calendarDays = [], isAdmin = false, loading = false }: Props = $props();
 	const user = $derived(page.data.user);
 
 	const daysOfWeek = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
@@ -122,6 +123,17 @@
 	</div>
 
 	<!-- Calendar Grid of Cells -->
+	{#if loading && calendarDays.length === 0}
+		<div class="grid grid-cols-7 divide-x divide-y divide-border/50 border-t border-l border-border/50" aria-busy="true" aria-label="กำลังโหลดตารางการใช้งาน">
+			{#each Array(35) as _, idx (idx)}
+				<div class="flex min-h-[160px] md:min-h-[185px] flex-col gap-2.5 p-4 bg-card animate-pulse">
+					<div class="h-6 w-6 rounded-lg bg-muted"></div>
+					<div class="h-10 w-full rounded bg-muted/70"></div>
+					<div class="h-8 w-4/5 rounded bg-muted/50"></div>
+				</div>
+			{/each}
+		</div>
+	{:else}
 	<div class="grid grid-cols-7 divide-x divide-y divide-border/50 border-t border-l border-border/50">
 		{#each calendarDays as day, i (day.dateKey)}
 			<div
@@ -204,6 +216,7 @@
 			</div>
 		{/each}
 	</div>
+	{/if}
 		</div>
 	</div>
 </Card.Root>

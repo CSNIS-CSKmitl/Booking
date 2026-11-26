@@ -6,6 +6,7 @@ import { goto } from "$app/navigation";
 export class DashboardFlow {
 	selectedRoomId = $state<string>("");
 	calendarDays = $state<any[]>([]);
+	loading = $state(true);
 	clockText = $state("");
 	dateText = $state("");
 	rawRooms = $state<Room[]>([]);
@@ -83,7 +84,8 @@ export class DashboardFlow {
 		});
 	}
 
-	async fetchAndRender(roomId: string, pocketbaseUrl: string): Promise<boolean> {
+	async fetchAndRender(roomId: string, pocketbaseUrl: string, silent = false): Promise<boolean> {
+		if (!silent) this.loading = true;
 		if (!this.pb) this.pb = new PocketBase(pocketbaseUrl);
 		try {
 			if (this.rawRooms.length === 0) {
@@ -112,6 +114,8 @@ export class DashboardFlow {
 		} catch (err) {
 			console.error("[dashboard flow] fetch bookings failed:", err);
 			return false;
+		} finally {
+			if (!silent) this.loading = false;
 		}
 	}
 }

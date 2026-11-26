@@ -87,6 +87,9 @@ export class BookingFlow {
 			this.rooms = data;
 		} catch (err) {
 			console.error("Failed to load rooms", err);
+			toast.error("ไม่สามารถโหลดรายการห้องได้", {
+				description: "กรุณาลองรีเฟรชหน้าใหม่อีกครั้ง",
+			});
 		} finally {
 			this.loadingRooms = false;
 		}
@@ -151,11 +154,13 @@ export class BookingFlow {
 		});
 		if (err) {
 			this.validationError = err;
+			toast.error("ระบุข้อมูลไม่ครบถ้วน", { description: err });
 			return;
 		}
 
 		if (!this.pb || !isValidRoomId(this.selectedRoomId)) {
 			this.submitError = "ระบบไม่พร้อมใช้งาน";
+			toast.error("ระบบไม่พร้อมใช้งาน", { description: "กรุณารีเฟรชหน้าแล้วลองใหม่" });
 			return;
 		}
 
@@ -169,6 +174,7 @@ export class BookingFlow {
 				const cStart = formatDisplayTime(conflict.start_time);
 				const cEnd = formatDisplayTime(conflict.end_time);
 				this.validationError = `เวลานี้ชนกับการจอง "${conflict.title}" (${cStart}-${cEnd})`;
+				toast.error("ช่วงเวลานี้ถูกจองแล้ว", { description: this.validationError });
 				return;
 			}
 

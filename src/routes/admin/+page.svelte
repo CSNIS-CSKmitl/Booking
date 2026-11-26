@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { enhance, deserialize } from '$app/forms';
+	import { toast } from 'svelte-sonner';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
 	import { Trash2, Pencil } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -14,10 +16,15 @@
 	let { data, form }: { data: any; form: any } = $props();
 	let roomName = $state('');
 	let roomLocation = $state('');
+	let creatingRoom = $state(false);
 	let selectedRange = $state<BookingTimeRange>('all');
 	let activeFilter = $state<BookingDrilldownFilter>('all');
 	let refreshing = $state(false);
 	let refreshedAt = $state('');
+	let loadedRoomImages = $state<Record<string, boolean>>({});
+	let failedRoomImages = $state<Record<string, boolean>>({});
+	let previewImageLoaded = $state(false);
+	let previewImageFailed = $state(false);
 
 	const statusText: Record<string, string> = {
 		approved: 'อนุมัติแล้ว',
@@ -26,10 +33,10 @@
 		cancelled: 'ยกเลิกแล้ว'
 	};
 	const statusClass: Record<string, string> = {
-		approved: 'bg-emerald-100 text-emerald-700',
-		confirmed: 'bg-emerald-100 text-emerald-700',
-		pending: 'bg-amber-100 text-amber-700',
-		cancelled: 'bg-slate-100 text-slate-500'
+		approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+		confirmed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+		pending: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
+		cancelled: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
 	};
 
 	const computedStats = $derived(
@@ -53,18 +60,19 @@
 			: '-';
 	}
 
-	async function handleRefresh() {
+	async function handleRefresh(showToast = false) {
 		refreshing = true;
 		try {
 			await invalidateAll();
 			refreshedAt = new Date().toISOString();
+			if (showToast) toast.success('รีเฟรชข้อมูลเรียบร้อยแล้ว');
+		} catch {
+			if (showToast) toast.error('รีเฟรชข้อมูลไม่สำเร็จ');
 		} finally {
 			refreshing = false;
 		}
 	}
 
-	
-	
 	let editingRoom = $state<{
 		id: string;
 		name: string;
@@ -83,6 +91,8 @@
 			seats: room.seats ?? null,
 			image_url: room.image_url ?? ''
 		};
+		previewImageLoaded = false;
+		previewImageFailed = false;
 		editDialogOpen = true;
 	}
 
@@ -102,30 +112,68 @@
 			}
 			body.set('image_url', editingRoom.image_url);
 
-			await fetch('?/updateRoom', { method: 'POST', body });
-			editDialogOpen = false;
-			editingRoom = null;
-			await handleRefresh();
+			const res = await fetch('?/updateRoom', { method: 'POST', body });
+			const result = deserialize(await res.text());
+			if (result.type === 'success') {
+				const msg = (result.data as any)?.message || `แก้ไขข้อมูลห้อง "${editingRoom.name}" เรียบร้อยแล้ว`;
+				toast.success(msg);
+				editDialogOpen = false;
+				editingRoom = null;
+				await handleRefresh(false);
+			} else if (result.type === 'failure') {
+				toast.error((result.data as any)?.message || 'แก้ไขห้องไม่สำเร็จ');
+			} else {
+				toast.error('แก้ไขห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+			}
+		} catch {
+			toast.error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
 		} finally {
 			editSaving = false;
 		}
 	}
+
 	async function handleDeleteRoom(id: string, name: string) {
 		if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบห้อง "${name}"?\nการกระทำนี้จะลบห้องออกจากระบบและไม่สามารถย้อนกลับได้`)) return;
-		const body = new FormData();
-		body.set('roomId', id);
-		await fetch('?/deleteRoom', { method: 'POST', body });
-		if (activeFilter === `room:${id}`) {
-			activeFilter = 'all';
+		try {
+			const body = new FormData();
+			body.set('roomId', id);
+			const res = await fetch('?/deleteRoom', { method: 'POST', body });
+			const result = deserialize(await res.text());
+			if (result.type === 'success') {
+				const msg = (result.data as any)?.message || `ลบห้อง "${name}" เรียบร้อยแล้ว`;
+				toast.success(msg);
+				if (activeFilter === `room:${id}`) {
+					activeFilter = 'all';
+				}
+				await handleRefresh(false);
+			} else if (result.type === 'failure') {
+				toast.error((result.data as any)?.message || 'ลบห้องไม่สำเร็จ');
+			} else {
+				toast.error('ลบห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+			}
+		} catch {
+			toast.error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
 		}
-		await handleRefresh();
 	}
+
 	async function cancel(id: string) {
 		if (!confirm('ยืนยันยกเลิกการจองนี้หรือไม่')) return;
-		const body = new FormData();
-		body.set('bookingId', id);
-		await fetch('?/cancel', { method: 'POST', body });
-		await handleRefresh();
+		try {
+			const body = new FormData();
+			body.set('bookingId', id);
+			const res = await fetch('?/cancel', { method: 'POST', body });
+			const result = deserialize(await res.text());
+			if (result.type === 'success') {
+				toast.success('ยกเลิกการจองเรียบร้อยแล้ว');
+				await handleRefresh(false);
+			} else if (result.type === 'failure') {
+				toast.error((result.data as any)?.message || 'ยกเลิกการจองไม่สำเร็จ');
+			} else {
+				toast.error('ยกเลิกการจองไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+			}
+		} catch {
+			toast.error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+		}
 	}
 </script>
 
@@ -134,14 +182,14 @@
 	<div class="mx-auto max-w-7xl space-y-6">
 		<div class="flex flex-wrap items-end justify-between gap-3">
 			<div>
-				<p class="text-xs font-bold uppercase tracking-widest text-indigo-600">Booking Admin</p>
+				<p class="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">Booking Admin</p>
 				<h1 class="mt-1 text-2xl font-bold">จัดการการจองห้อง</h1>
 			</div>
-			<a class="rounded-lg border border-border px-4 py-2 text-sm" href="/">กลับหน้าหลัก</a>
+			<a class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors" href="/">กลับหน้าหลัก</a>
 		</div>
 
-		{#if form?.message}
-			<div class="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{form.message}</div>
+		{#if form?.message && !form?.ok}
+			<div class="rounded-lg bg-rose-50 dark:bg-rose-950/30 p-3 text-sm text-rose-700 dark:text-rose-300">{form.message}</div>
 		{/if}
 
 		<section class="rounded-xl border border-border bg-card p-4">
@@ -152,6 +200,25 @@
 			<form
 				method="POST"
 				action="?/createRoom"
+				use:enhance={({ formElement }) => {
+					creatingRoom = true;
+					return async ({ result, update }) => {
+						creatingRoom = false;
+						if (result.type === 'success') {
+							const msg = (result.data as any)?.message || 'เพิ่มห้องเรียบร้อยแล้ว';
+							toast.success(msg);
+							roomName = '';
+							roomLocation = '';
+							formElement.reset();
+							await update({ reset: true });
+						} else if (result.type === 'failure') {
+							toast.error((result.data as any)?.message || 'เพิ่มห้องไม่สำเร็จ');
+							await update({ reset: false });
+						} else {
+							toast.error('เกิดข้อผิดพลาดในการเพิ่มห้อง');
+						}
+					};
+				}}
 				class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_0.8fr_1.5fr_auto] items-end"
 			>
 				<label class="grid gap-1 text-sm">
@@ -196,9 +263,10 @@
 				</label>
 				<button
 					type="submit"
-					class="h-10 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 whitespace-nowrap"
+					disabled={creatingRoom}
+					class="h-10 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 whitespace-nowrap cursor-pointer disabled:opacity-50"
 				>
-					เพิ่มห้อง
+					{creatingRoom ? 'กำลังเพิ่ม...' : 'เพิ่มห้อง'}
 				</button>
 			</form>
 		</section>
@@ -215,7 +283,7 @@
 					{@const roomFilter = `room:${room.id}` as const}
 					<div
 						class="group relative flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-all {activeFilter === roomFilter
-							? 'border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20'
+							? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20'
 							: 'border-border/70 hover:border-indigo-300 bg-card'}"
 					>
 						<button
@@ -223,8 +291,21 @@
 							class="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer"
 							onclick={() => (activeFilter = activeFilter === roomFilter ? 'all' : roomFilter)}
 						>
-							{#if room.image_url}
-								<img src={room.image_url} alt="" class="h-10 w-10 shrink-0 rounded-lg object-cover border border-border" />
+							{#if room.image_url && !failedRoomImages[room.id]}
+								<div class="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-border bg-muted">
+									{#if !loadedRoomImages[room.id]}
+										<div class="absolute inset-0 animate-pulse bg-muted"></div>
+									{/if}
+									<img
+										src={room.image_url}
+										alt={room.name}
+										loading="lazy"
+										decoding="async"
+										onload={() => (loadedRoomImages[room.id] = true)}
+										onerror={() => (failedRoomImages[room.id] = true)}
+										class="h-full w-full object-cover transition-opacity duration-300 {loadedRoomImages[room.id] ? 'opacity-100' : 'opacity-0'}"
+									/>
+								</div>
 							{/if}
 							<div class="min-w-0 flex-1">
 								<p class="font-semibold text-sm truncate">{room.name}</p>
@@ -271,8 +352,8 @@
 				<div class="flex flex-wrap items-center gap-1.5">
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'all'
-							? 'bg-slate-800 text-white'
+						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'all'
+							? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'all')}
 					>
@@ -280,7 +361,7 @@
 					</button>
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'active'
+						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'active'
 							? 'bg-emerald-600 text-white'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'active')}
@@ -289,7 +370,7 @@
 					</button>
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'upcoming'
+						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'upcoming'
 							? 'bg-amber-600 text-white'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'upcoming')}
@@ -298,7 +379,7 @@
 					</button>
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition {activeFilter === 'cancelled'
+						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'cancelled'
 							? 'bg-rose-600 text-white'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'cancelled')}
@@ -321,62 +402,75 @@
 							<th class="px-4 py-3 text-right">จัดการ</th>
 						</tr>
 					</thead>
-					<tbody>
-						{#each filteredBookings as booking (booking.id)}
-							<tr class="border-b border-border/60 last:border-0">
-								<td class="px-4 py-3 font-medium">
-									{booking.title}
-									{#if booking.advisorName}
-										<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}</p>
-									{/if}
-									{#if booking.detailLabel}
-										<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-muted-foreground">หมายเหตุ: {booking.detailLabel}</p>
-									{/if}
-								</td>
-								<td class="px-4 py-3">
-									{booking.roomName}{booking.location ? ` (${booking.location})` : ''}
-								</td>
-								<td class="px-4 py-3 whitespace-nowrap text-muted-foreground">
-									{displayDate(booking.start_time)}<br />ถึง {displayDate(booking.end_time)}
-								</td>
-								<td class="px-4 py-3">
-									{booking.bookerName || '-'}<br />
-									<span class="text-xs text-muted-foreground">{booking.bookerEmail}</span>
-								</td>
-								<td class="px-4 py-3">
-									<span
-										class={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[booking.status ?? ''] ?? 'bg-slate-100 text-slate-600'}`}
-									>
-										{statusText[booking.status ?? ''] ?? booking.status ?? '-'}
-									</span>
-									<p class="mt-2 text-xs text-muted-foreground">เพิ่มโดย: {booking.createdBy || '-'}<br />แก้ไขโดย: {booking.updatedBy || '-'}</p>
-					{#if booking.approvedBy || booking.approvedAt}<p class="text-xs text-muted-foreground">อนุมัติโดย: {booking.approvedBy || 'ระบบ'}{booking.approvedAt ? ` · ${displayDate(booking.approvedAt)}` : ''}</p>{/if}
-								</td>
-								<td class="px-4 py-3 text-right">
-									{#if booking.status !== 'cancelled'}
-										<button
-											class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"
-											onclick={() => booking.id && cancel(booking.id)}
-										>
-											ยกเลิก
-										</button>
-									{:else}
-										<span class="text-xs text-muted-foreground">-</span>
-									{/if}
-								</td>
-							</tr>
+					<tbody class={refreshing ? 'opacity-60 transition-opacity' : ''}>
+						{#if refreshing && filteredBookings.length === 0}
+							{#each Array(4) as _, idx (idx)}
+								<tr class="border-b border-border/60 animate-pulse">
+									<td class="px-4 py-3"><div class="h-4 w-40 rounded bg-muted"></div></td>
+									<td class="px-4 py-3"><div class="h-4 w-24 rounded bg-muted"></div></td>
+									<td class="px-4 py-3"><div class="h-4 w-32 rounded bg-muted"></div></td>
+									<td class="px-4 py-3"><div class="h-4 w-28 rounded bg-muted"></div></td>
+									<td class="px-4 py-3"><div class="h-5 w-20 rounded-full bg-muted"></div></td>
+									<td class="px-4 py-3 text-right"><div class="ml-auto h-7 w-16 rounded-lg bg-muted"></div></td>
+								</tr>
+							{/each}
 						{:else}
-							<tr>
-								<td colspan="6" class="px-4 py-12 text-center text-muted-foreground">
-									ไม่มีข้อมูลการจองในตัวกรองที่เลือก
-								</td>
-							</tr>
-						{/each}
+							{#each filteredBookings as booking (booking.id)}
+								<tr class="border-b border-border/60 last:border-0">
+									<td class="px-4 py-3 font-medium">
+										{booking.title}
+										{#if booking.advisorName}
+											<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}</p>
+										{/if}
+										{#if booking.detailLabel}
+											<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-muted-foreground">หมายเหตุ: {booking.detailLabel}</p>
+										{/if}
+									</td>
+									<td class="px-4 py-3">
+										{booking.roomName}{booking.location ? ` (${booking.location})` : ''}
+									</td>
+									<td class="px-4 py-3 whitespace-nowrap text-muted-foreground">
+										{displayDate(booking.start_time)}<br />ถึง {displayDate(booking.end_time)}
+									</td>
+									<td class="px-4 py-3">
+										{booking.bookerName || '-'}<br />
+										<span class="text-xs text-muted-foreground">{booking.bookerEmail}</span>
+									</td>
+									<td class="px-4 py-3">
+										<span
+											class={`rounded-full px-2 py-1 text-xs font-medium ${statusClass[booking.status ?? ''] ?? 'bg-slate-100 text-slate-600'}`}
+										>
+											{statusText[booking.status ?? ''] ?? booking.status ?? '-'}
+										</span>
+										<p class="mt-2 text-xs text-muted-foreground">เพิ่มโดย: {booking.createdBy || '-'}<br />แก้ไขโดย: {booking.updatedBy || '-'}</p>
+										{#if booking.approvedBy || booking.approvedAt}<p class="text-xs text-muted-foreground">อนุมัติโดย: {booking.approvedBy || 'ระบบ'}{booking.approvedAt ? ` · ${displayDate(booking.approvedAt)}` : ''}</p>{/if}
+									</td>
+									<td class="px-4 py-3 text-right">
+										{#if booking.status !== 'cancelled'}
+											<button
+												class="rounded-lg border border-rose-200 dark:border-rose-900/50 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
+												onclick={() => booking.id && cancel(booking.id)}
+											>
+												ยกเลิก
+											</button>
+										{:else}
+											<span class="text-xs text-muted-foreground">-</span>
+										{/if}
+									</td>
+								</tr>
+							{:else}
+								<tr>
+									<td colspan="6" class="px-4 py-12 text-center text-muted-foreground">
+										ไม่มีข้อมูลการจองในตัวกรองที่เลือก
+									</td>
+								</tr>
+							{/each}
+						{/if}
 					</tbody>
 				</table>
 			</div>
 		</div>
-			<BookingStats
+		<BookingStats
 			stats={computedStats}
 			{selectedRange}
 			{activeFilter}
@@ -386,7 +480,7 @@
 			isRealtime={false}
 			onRangeChange={(range) => (selectedRange = range)}
 			onDrilldown={(filter) => (activeFilter = filter)}
-			onRefresh={handleRefresh}
+			onRefresh={() => handleRefresh(true)}
 		/>
 	</div>
 
@@ -443,14 +537,31 @@
 					<input
 						type="url"
 						bind:value={editingRoom.image_url}
+						oninput={() => {
+							previewImageLoaded = false;
+							previewImageFailed = false;
+						}}
 						class="h-10 rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600"
 						placeholder="https://..."
 					/>
 				</label>
 
-				{#if editingRoom.image_url}
+				{#if editingRoom.image_url && !previewImageFailed}
 					<div class="rounded-lg border border-border p-2 bg-muted/30 flex items-center gap-3">
-						<img src={editingRoom.image_url} alt="Room preview" class="h-12 w-16 object-cover rounded border border-border" />
+						<div class="relative h-12 w-16 shrink-0 overflow-hidden rounded border border-border bg-muted">
+							{#if !previewImageLoaded}
+								<div class="absolute inset-0 animate-pulse bg-muted"></div>
+							{/if}
+							<img
+								src={editingRoom.image_url}
+								alt="Room preview"
+								loading="lazy"
+								decoding="async"
+								onload={() => (previewImageLoaded = true)}
+								onerror={() => (previewImageFailed = true)}
+								class="h-full w-full object-cover transition-opacity duration-300 {previewImageLoaded ? 'opacity-100' : 'opacity-0'}"
+							/>
+						</div>
 						<span class="text-xs text-muted-foreground truncate flex-1">ภาพตัวอย่างห้อง</span>
 					</div>
 				{/if}

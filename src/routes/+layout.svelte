@@ -19,14 +19,18 @@
 </svelte:head>
 
 <ModeWatcher defaultMode="light" />
-<Toaster />
+<Toaster position="top-center" richColors />
 {#if !page.url.pathname.startsWith('/dashboard/') && !page.url.pathname.startsWith('/room')}
 	<AnnouncementCenter />
 {/if}
 
 <!-- <Topbar /> -->
 <div class="flex min-h-screen flex-col">
-	<div class="flex-1">{@render children()}</div>
+	<div class="flex-1">
+		{#key page.url.pathname}
+			<div class="animate-page-enter">{@render children()}</div>
+		{/key}
+	</div>
 	<footer class="border-t border-border bg-background px-4 py-3 text-center text-[11px] text-muted-foreground">
         <span>© {new Date().getFullYear()} · <a href="https://github.com/techasit5415" target="_blank" rel="noopener noreferrer" class="hover:text-foreground hover:underline">นาย เตชสิทธิ์ วาณิชภัทรกุล</a></span>
 		<nav aria-label="นโยบายและข้อกำหนด" class="mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-0">

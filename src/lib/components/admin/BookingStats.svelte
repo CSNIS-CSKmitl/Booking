@@ -136,9 +136,31 @@
 
 	<!-- Loading & Error States -->
 	{#if loading && !lastUpdated}
-		<div class="rounded-xl border border-border bg-card p-8 text-center" role="status">
-			<p class="text-sm font-semibold">กำลังโหลดสถิติ...</p>
-			<p class="mt-1 text-xs text-muted-foreground">กำลังดึงข้อมูลการจองและการใช้งานห้อง</p>
+		<div class="space-y-4" role="status" aria-busy="true" aria-label="กำลังโหลดสถิติ">
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+				{#each Array(6) as _, idx (idx)}
+					<div class="rounded-xl border border-border bg-card p-4 space-y-2.5 animate-pulse">
+						<div class="h-3 w-24 rounded bg-muted"></div>
+						<div class="h-7 w-16 rounded bg-muted"></div>
+						<div class="h-3 w-28 rounded bg-muted/70"></div>
+					</div>
+				{/each}
+			</div>
+			<div class="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+				<div class="grid gap-3 sm:grid-cols-2">
+					{#each Array(4) as _, idx (idx)}
+						<div class="rounded-xl border border-border bg-card p-4 space-y-2.5 animate-pulse">
+							<div class="h-3 w-28 rounded bg-muted"></div>
+							<div class="h-6 w-20 rounded bg-muted"></div>
+							<div class="h-3 w-32 rounded bg-muted/70"></div>
+						</div>
+					{/each}
+				</div>
+				<div class="rounded-xl border border-border bg-card p-4 space-y-3 animate-pulse">
+					<div class="h-4 w-40 rounded bg-muted"></div>
+					<div class="h-40 w-full rounded-lg bg-muted/60"></div>
+				</div>
+			</div>
 		</div>
 	{:else if error}
 		<div

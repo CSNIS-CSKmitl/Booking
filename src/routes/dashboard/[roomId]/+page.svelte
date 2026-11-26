@@ -55,7 +55,7 @@
 			const POLL_INTERVAL_MS = 30_000;
 			const pollTimer = window.setInterval(async () => {
 				if (cancelled) return;
-				await flow.fetchAndRender(roomId, pocketbaseUrl);
+				await flow.fetchAndRender(roomId, pocketbaseUrl, true);
 			}, POLL_INTERVAL_MS);
 
 			(window as any).__dashPollTimer = pollTimer;
@@ -77,7 +77,7 @@
 </svelte:head>
 
 <div
-	class="bg-background text-foreground min-h-screen w-screen font-['Inter','Prompt',sans-serif] antialiased"
+	class="bg-background text-foreground min-h-screen w-full font-['Inter','Prompt',sans-serif] antialiased"
 >
 	<div
 		class="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-6 px-6 py-6 md:px-10 md:py-8"
@@ -107,7 +107,7 @@
 
 		<!-- ============ CALENDAR ============ -->
 		<main class="flex-1">
-			<MonthlyStatusCalendar calendarDays={flow.calendarDays} {isAdmin} />
+			<MonthlyStatusCalendar calendarDays={flow.calendarDays} {isAdmin} loading={flow.loading} />
 		</main>
 	</div>
 </div>

@@ -83,7 +83,7 @@
 </svelte:head>
 
 <div
-	class="bg-background text-foreground min-h-screen w-screen font-['Inter','Prompt',sans-serif] antialiased"
+	class="bg-background text-foreground min-h-screen w-full font-['Inter','Prompt',sans-serif] antialiased"
 >
 	<Topbar />
 
@@ -141,6 +141,7 @@
 						bind:notes={flow.notes}
 						bind:advisorName={flow.advisorName}
 						bind:customBookerName={flow.customBookerName}
+						{teachers}
 						{isAdmin}
 					/>
 

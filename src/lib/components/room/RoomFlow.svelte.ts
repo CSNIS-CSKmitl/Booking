@@ -2,8 +2,10 @@ import { isValidRoomId, escapeFilterValue, mapRecord, mapRoom, calculateDerivedS
 import PocketBase from "pocketbase";
 import QRCode from "qrcode";
 import type { BookingItem, BookingViewState } from "$lib/types";
+import { toast } from "svelte-sonner";
 
 export class RoomFlow {
+	loading = $state(true);
 	clockText = $state("");
 	dateText = $state("");
 	qrCodeDataUrl = $state("");
@@ -73,12 +75,15 @@ export class RoomFlow {
 		if (!pocketbaseUrl) {
 			this.statusLabel = "DEMO MODE";
 			await this.generateQrCode();
+			this.loading = false;
 			return;
 		}
 
 		if (!isValidRoomId(currentRoomId)) {
 			console.warn(`Invalid roomId: ${currentRoomId}`);
 			this.statusLabel = "INVALID ROOM";
+			toast.error("รหัสห้องไม่ถูกต้อง");
+			this.loading = false;
 			return;
 		}
 		const safeRoomId = escapeFilterValue(currentRoomId);
@@ -93,10 +98,12 @@ export class RoomFlow {
 			}
 		} catch (err) {
 			console.error(`หาห้องไอดี ${currentRoomId} ไม่เจอในระบบ`, err);
+			toast.error("ไม่พบข้อมูลห้องที่ระบุ");
 		}
 
 		const POLL_INTERVAL_MS = 15_000;
 		let pollTimer: number | null = null;
+		let isInitial = true;
 
 		const fetchAndSetBookings = async () => {
 			if (onDestroyed()) return;
@@ -111,6 +118,14 @@ export class RoomFlow {
 				await this.generateQrCode();
 			} catch (err) {
 				console.error("[room display] Failed to sync bookings:", err);
+				if (isInitial) {
+					toast.error("ไม่สามารถซิงค์ตารางการใช้งานห้องได้");
+				}
+			} finally {
+				if (isInitial) {
+					isInitial = false;
+					this.loading = false;
+				}
 			}
 		};
 

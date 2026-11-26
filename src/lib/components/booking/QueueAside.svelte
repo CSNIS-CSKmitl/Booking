@@ -67,11 +67,17 @@
 					</p>
 				</div>
 			{:else if loadingBookings}
-				<div
-					class="text-muted-foreground flex items-center justify-center py-8 gap-2 text-xs"
-				>
-					<Loader2 class="h-4 w-4 animate-spin text-indigo-600" />
-					กำลังดึงรายการคิวจอง...
+				<div class="space-y-3 py-1" aria-busy="true" aria-label="กำลังดึงรายการคิวจอง">
+					{#each Array(3) as _, idx (idx)}
+						<div class="rounded-lg border border-border/70 bg-muted/30 p-3.5 space-y-2.5 animate-pulse">
+							<div class="flex items-center justify-between gap-2">
+								<div class="h-4 w-24 rounded bg-muted"></div>
+								<div class="h-4 w-14 rounded bg-muted"></div>
+							</div>
+							<div class="h-3.5 w-3/4 rounded bg-muted"></div>
+							<div class="h-3 w-1/2 rounded bg-muted"></div>
+						</div>
+					{/each}
 				</div>
 			{:else if existingBookings.length === 0}
 				<div

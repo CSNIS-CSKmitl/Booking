@@ -18,6 +18,9 @@
 		onSelectRoom: (id: string) => void;
 		getRoomName: (id: string) => string;
 	} = $props();
+
+	let loadedImages = $state<Record<string, boolean>>({});
+	let failedImages = $state<Record<string, boolean>>({});
 </script>
 
 <Card.Root
@@ -50,11 +53,19 @@
 
 	<Card.Content class="p-6">
 		{#if loadingRooms}
-			<div
-				class="text-muted-foreground flex items-center justify-center py-6 gap-2 text-xs"
-			>
-				<Loader2 class="h-4 w-4 animate-spin text-indigo-600" />
-				กำลังโหลดรายการห้อง...
+			<div class="grid grid-cols-1 gap-3.5 sm:grid-cols-2" aria-busy="true" aria-label="กำลังโหลดรายการห้อง">
+				{#each Array(4) as _, idx (idx)}
+					<div class="rounded-xl border border-border bg-card p-3.5 flex items-stretch gap-3.5 animate-pulse">
+						<div class="h-20 w-24 sm:w-28 shrink-0 rounded-lg bg-muted"></div>
+						<div class="flex flex-1 flex-col justify-between py-1 gap-2">
+							<div class="space-y-2">
+								<div class="h-4 w-3/4 rounded bg-muted"></div>
+								<div class="h-3 w-1/2 rounded bg-muted"></div>
+							</div>
+							<div class="h-5 w-20 rounded-md bg-muted"></div>
+						</div>
+					</div>
+				{/each}
 			</div>
 		{:else if rooms.length === 0}
 			<div
@@ -77,12 +88,21 @@
 					>
 						<!-- Room Image / Thumbnail -->
 						<div class="relative h-20 w-24 sm:w-28 shrink-0 overflow-hidden rounded-lg bg-muted border border-border/60">
-							{#if room.image_url}
+							{#if room.image_url && !failedImages[room.id]}
+								{#if !loadedImages[room.id]}
+									<div class="absolute inset-0 animate-pulse bg-muted"></div>
+								{/if}
 								<img
 									src={room.image_url}
 									alt={room.name}
-									class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+									class={cn(
+										"h-full w-full object-cover transition-all duration-300 group-hover:scale-105",
+										loadedImages[room.id] ? "opacity-100" : "opacity-0"
+									)}
 									loading="lazy"
+									decoding="async"
+									onload={() => (loadedImages[room.id] = true)}
+									onerror={() => (failedImages[room.id] = true)}
 								/>
 							{:else}
 								<div class="flex h-full w-full items-center justify-center text-muted-foreground/40 bg-muted/60">

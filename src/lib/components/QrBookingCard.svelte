@@ -33,13 +33,15 @@
 					class="h-28 w-28 object-contain rounded-md"
 					src={qrCodeDataUrl}
 					alt="QR code สำหรับจองห้อง"
+					loading="lazy"
+					decoding="async"
 				/>
 			{:else}
 				<div
-					class="text-muted-foreground grid h-36 w-36 place-items-center text-sm font-semibold"
+					class="text-muted-foreground grid h-28 w-28 place-items-center rounded-md bg-muted animate-pulse text-sm font-semibold"
 				>
 					<QrCode
-						class="h-8 w-8 animate-pulse text-muted-foreground"
+						class="h-8 w-8 text-muted-foreground/60"
 					/>
 				</div>
 			{/if}
