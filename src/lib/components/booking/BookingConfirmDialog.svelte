@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Card from "$lib/components/ui/card";
 	import { Button } from "$lib/components/ui/button";
@@ -21,6 +21,7 @@
 		title,
 		notes = "",
 		advisorName = "",
+		advisorEmail = "",
 		isRecurring = false,
 		recurringUntil = "",
 		recurringDaysText = "",
@@ -38,6 +39,7 @@
 		title: string;
 		notes?: string;
 		advisorName?: string;
+		advisorEmail?: string;
 		isRecurring?: boolean;
 		recurringUntil?: string;
 		recurringDaysText?: string;
@@ -101,16 +103,15 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<p
-						class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+						class="text-[10px] font-semibold text-muted-foreground"
 					>
 						ห้องเรียน / ห้องประชุม
 					</p>
 					<p class="text-sm font-semibold text-foreground truncate">
-						{roomName || "ยังไม่ได้เลือกห้อง"} ,
-						<span
-							class="text-xs font-semibold text-muted-foreground"
-							>({roomLocation})</span
-						>
+						{roomName || "ยังไม่ได้เลือกห้อง"}
+						{#if roomLocation}
+							, <span class="text-xs font-semibold text-muted-foreground">({roomLocation})</span>
+						{/if}
 					</p>
 				</div>
 			</div>
@@ -124,7 +125,7 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<p
-						class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+						class="text-[10px] font-semibold text-muted-foreground"
 					>
 						วันและเวลา
 					</p>
@@ -143,7 +144,7 @@
 				</div>
 				<div class="flex-1 min-w-0">
 					<p
-						class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+						class="text-[10px] font-semibold text-muted-foreground"
 					>
 						หัวข้อการจอง
 					</p>
@@ -163,7 +164,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p
-							class="text-xs text-muted-foreground uppercase tracking-wider"
+							class="text-xs text-muted-foreground"
 						>
 							ผู้จอง
 						</p>
@@ -184,7 +185,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p
-							class="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider"
+							class="text-[10px] font-semibold text-muted-foreground"
 						>
 							การจองซ้ำ (Weekly)
 						</p>
@@ -204,7 +205,7 @@
 			{#if advisorName.trim()}
 				<div class="text-sm text-foreground break-words">
 					<p class="text-xs text-muted-foreground">อาจารย์ที่ปรึกษา</p>
-					<p>{advisorName}</p>
+					<p class="font-medium">{advisorName}{advisorEmail ? ` (${advisorEmail})` : ""}</p>
 				</div>
 			{/if}
 			{#if notes}
@@ -216,7 +217,7 @@
 					</div>
 					<div class="flex-1 min-w-0">
 						<p
-							class="text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+							class="text-xs font-semibold text-muted-foreground"
 						>
 							รายละเอียดเพิ่มเติม
 						</p>
@@ -291,7 +292,7 @@
 			<Button
 				onclick={handleConfirm}
 				disabled={submitting || !accepted}
-				class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all"
+				class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-colors"
 			>
 				{#if submitting}
 					กำลังดำเนินการ...

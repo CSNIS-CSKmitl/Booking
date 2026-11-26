@@ -1,13 +1,15 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { enhance, deserialize } from '$app/forms';
 	import { toast } from 'svelte-sonner';
 	import BookingStats from '$lib/components/admin/BookingStats.svelte';
-	import { Trash2, Pencil } from '@lucide/svelte';
+	import { Trash2, Pencil, FileText, CalendarDays, DoorOpen, User, GraduationCap, Eye, Download } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import {
 		computeBookingStats,
 		filterBookingsByDrilldown,
+		parseBookingDate,
+		formatBookingDateTimeRange,
 		filterBookingsByTimeRange,
 		type BookingDrilldownFilter,
 		type BookingTimeRange
@@ -121,9 +123,9 @@
 				editingRoom = null;
 				await handleRefresh(false);
 			} else if (result.type === 'failure') {
-				toast.error((result.data as any)?.message || 'แก้ไขห้องไม่สำเร็จ');
+				toast.error((result.data as any)?.message || 'บันทึกข้อมูลห้องไม่สำเร็จ');
 			} else {
-				toast.error('แก้ไขห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+				toast.error('บันทึกข้อมูลห้องไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
 			}
 		} catch {
 			toast.error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
@@ -156,7 +158,80 @@
 		}
 	}
 
-	async function cancel(id: string) {
+	function isBookingPast(booking: any): boolean {
+		const end = parseBookingDate(booking?.end_time);
+		return end ? end.getTime() < Date.now() : false;
+	}
+
+	function exportBookingsCsv() {
+		const headers = [
+			'หัวข้อ',
+			'ห้อง',
+			'สถานที่',
+			'วันเวลาเริ่มต้น',
+			'วันเวลาสิ้นสุด',
+			'ผู้จอง',
+			'อีเมลผู้จอง',
+			'อาจารย์ที่ปรึกษา',
+			'อีเมลอาจารย์ที่ปรึกษา',
+			'สถานะ',
+			'หมายเหตุ',
+			'เพิ่มโดย',
+			'แก้ไขโดย',
+			'อนุมัติโดย',
+			'วันที่อนุมัติ'
+		];
+
+		const escapeCsv = (val: unknown) => {
+			if (val === null || val === undefined) return '""';
+			const s = String(val).replace(/"/g, '""');
+			return `"${s}"`;
+		};
+
+		const rows = filteredBookings.map((b) => [
+			escapeCsv(b.title || ''),
+			escapeCsv(b.roomName || ''),
+			escapeCsv(b.location || ''),
+			escapeCsv(displayDate(b.start_time)),
+			escapeCsv(displayDate(b.end_time)),
+			escapeCsv(b.bookerName || ''),
+			escapeCsv(b.bookerEmail || ''),
+			escapeCsv(b.advisorName || ''),
+			escapeCsv(b.advisorEmail || ''),
+			escapeCsv(statusText[b.status ?? ''] ?? b.status ?? ''),
+			escapeCsv(b.detailLabel || ''),
+			escapeCsv(b.createdBy || ''),
+			escapeCsv(b.updatedBy || ''),
+			escapeCsv(b.approvedBy || ''),
+			escapeCsv(b.approvedAt ? displayDate(b.approvedAt) : '')
+		]);
+
+		const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows.map((r) => r.join(','))].join('\n');
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', `bookings_export_${new Date().toISOString().slice(0, 10)}.csv`);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+		toast.success('ส่งออกไฟล์ CSV เรียบร้อยแล้ว');
+	}
+
+	let selectedBooking = $state<any | null>(null);
+	let detailDialogOpen = $state(false);
+
+	function openBookingDetail(booking: any) {
+		selectedBooking = booking;
+		detailDialogOpen = true;
+	}
+
+	async function cancel(id: string, isPast = false) {
+		if (isPast) {
+			toast.error('ไม่สามารถยกเลิกการจองที่ผ่านมาแล้วได้');
+			return;
+		}
 		if (!confirm('ยืนยันยกเลิกการจองนี้หรือไม่')) return;
 		try {
 			const body = new FormData();
@@ -165,6 +240,9 @@
 			const result = deserialize(await res.text());
 			if (result.type === 'success') {
 				toast.success('ยกเลิกการจองเรียบร้อยแล้ว');
+				if (detailDialogOpen && selectedBooking?.id === id) {
+					detailDialogOpen = false;
+				}
 				await handleRefresh(false);
 			} else if (result.type === 'failure') {
 				toast.error((result.data as any)?.message || 'ยกเลิกการจองไม่สำเร็จ');
@@ -175,7 +253,16 @@
 			toast.error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
 		}
 	}
+
+	function handleGlobalKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			detailDialogOpen = false;
+			editDialogOpen = false;
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleGlobalKeydown} />
 
 <svelte:head><title>จัดการการจอง | Booking Admin</title></svelte:head>
 <div class="min-h-screen bg-background px-4 py-6 text-foreground md:px-8">
@@ -282,7 +369,7 @@
 				{#each data.rooms as room (room.id)}
 					{@const roomFilter = `room:${room.id}` as const}
 					<div
-						class="group relative flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-all {activeFilter === roomFilter
+						class="group relative flex items-center justify-between gap-2 rounded-xl border p-2.5 transition-colors {activeFilter === roomFilter
 							? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30 ring-2 ring-indigo-500/20'
 							: 'border-border/70 hover:border-indigo-300 bg-card'}"
 					>
@@ -352,7 +439,7 @@
 				<div class="flex flex-wrap items-center gap-1.5">
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'all'
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer {activeFilter === 'all'
 							? 'bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'all')}
@@ -361,33 +448,54 @@
 					</button>
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'active'
-							? 'bg-emerald-600 text-white'
-							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
-						onclick={() => (activeFilter = 'active')}
-					>
-						กำลังใช้งาน ({computedStats.active})
-					</button>
-					<button
-						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'upcoming'
-							? 'bg-amber-600 text-white'
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer {activeFilter === 'upcoming'
+							? 'bg-amber-600 text-white ring-2 ring-amber-500/20'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'upcoming')}
 					>
 						กำลังจะมาถึง ({computedStats.upcoming})
 					</button>
+					{#if computedStats.ongoing > 0}
+						<button
+							type="button"
+							class="rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer {activeFilter === 'ongoing'
+								? 'bg-emerald-600 text-white ring-2 ring-emerald-500/20'
+								: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'}"
+							onclick={() => (activeFilter = 'ongoing')}
+						>
+							กำลังใช้งาน ({computedStats.ongoing})
+						</button>
+					{/if}
 					<button
 						type="button"
-						class="rounded-lg px-3 py-1 text-xs font-semibold transition cursor-pointer {activeFilter === 'cancelled'
-							? 'bg-rose-600 text-white'
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer {activeFilter === 'completed'
+							? 'bg-indigo-600 text-white ring-2 ring-indigo-500/20'
+							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
+						onclick={() => (activeFilter = 'completed')}
+					>
+						สิ้นสุดแล้ว ({computedStats.completed})
+					</button>
+					<button
+						type="button"
+						class="rounded-lg px-3 py-1.5 text-xs font-semibold transition cursor-pointer {activeFilter === 'cancelled'
+							? 'bg-rose-600 text-white ring-2 ring-rose-500/20'
 							: 'bg-muted/60 text-muted-foreground hover:bg-muted'}"
 						onclick={() => (activeFilter = 'cancelled')}
 					>
 						ยกเลิกแล้ว ({computedStats.cancelled})
 					</button>
 				</div>
-				<span class="text-xs text-muted-foreground">แสดง {filteredBookings.length} รายการ</span>
+				<div class="flex items-center gap-2">
+					<span class="text-xs text-muted-foreground">แสดง {filteredBookings.length} รายการ</span>
+					<button
+						type="button"
+						class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 transition-colors cursor-pointer"
+						onclick={exportBookingsCsv}
+					>
+						<Download class="size-3.5" />
+						<span>Export CSV</span>
+					</button>
+				</div>
 			</div>
 
 			<div class="overflow-x-auto">
@@ -416,21 +524,32 @@
 							{/each}
 						{:else}
 							{#each filteredBookings as booking (booking.id)}
-								<tr class="border-b border-border/60 last:border-0">
+								{@const isPast = isBookingPast(booking)}
+								{@const dt = formatBookingDateTimeRange(booking.start_time, booking.end_time)}
+								<tr
+									class="border-b border-border/60 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
+									onclick={() => openBookingDetail(booking)}
+									title="คลิกเพื่อดูรายละเอียดการจอง"
+								>
 									<td class="px-4 py-3 font-medium">
-										{booking.title}
+										<div class="flex items-center gap-1.5">
+											<span class="text-foreground font-semibold hover:underline">{booking.title}</span>
+											<Eye class="size-3 text-muted-foreground/60 shrink-0" />
+										</div>
 										{#if booking.advisorName}
-											<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}</p>
+											<p class="mt-1 text-xs font-normal text-muted-foreground">อาจารย์ที่ปรึกษา: {booking.advisorName}{booking.advisorEmail ? ` (${booking.advisorEmail})` : ""}</p>
 										{/if}
 										{#if booking.detailLabel}
-											<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-muted-foreground">หมายเหตุ: {booking.detailLabel}</p>
+											<p class="mt-1 whitespace-pre-wrap break-words text-xs font-normal text-amber-800 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 max-w-md">หมายเหตุ: {booking.detailLabel}</p>
 										{/if}
 									</td>
 									<td class="px-4 py-3">
 										{booking.roomName}{booking.location ? ` (${booking.location})` : ''}
 									</td>
-									<td class="px-4 py-3 whitespace-nowrap text-muted-foreground">
-										{displayDate(booking.start_time)}<br />ถึง {displayDate(booking.end_time)}
+									<td class="px-4 py-3 whitespace-nowrap">
+										<span class="font-medium text-foreground">{dt.dateStr}</span>
+										<br />
+										<span class="text-xs text-muted-foreground">{dt.timeStr}</span>
 									</td>
 									<td class="px-4 py-3">
 										{booking.bookerName || '-'}<br />
@@ -446,13 +565,21 @@
 										{#if booking.approvedBy || booking.approvedAt}<p class="text-xs text-muted-foreground">อนุมัติโดย: {booking.approvedBy || 'ระบบ'}{booking.approvedAt ? ` · ${displayDate(booking.approvedAt)}` : ''}</p>{/if}
 									</td>
 									<td class="px-4 py-3 text-right">
-										{#if booking.status !== 'cancelled'}
+										{#if booking.status !== 'cancelled' && !isPast}
 											<button
-												class="rounded-lg border border-rose-200 dark:border-rose-900/50 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer transition-colors"
-												onclick={() => booking.id && cancel(booking.id)}
+												type="button"
+												class="rounded-lg border border-rose-200 dark:border-rose-900/60 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+												onclick={(e) => {
+													e.stopPropagation();
+													booking.id && cancel(booking.id, false);
+												}}
 											>
 												ยกเลิก
 											</button>
+										{:else if isPast}
+											<span class="inline-flex rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground font-medium">
+												สิ้นสุดแล้ว
+											</span>
 										{:else}
 											<span class="text-xs text-muted-foreground">-</span>
 										{/if}
@@ -584,6 +711,126 @@
 					</button>
 				</div>
 			</form>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root bind:open={detailDialogOpen}>
+	<Dialog.Content class="sm:max-w-[560px] bg-card border border-border rounded-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+		{#if selectedBooking}
+			{@const isPast = isBookingPast(selectedBooking)}
+			{@const mdt = formatBookingDateTimeRange(selectedBooking.start_time, selectedBooking.end_time)}
+			<Dialog.Header class="space-y-2 pb-3 border-b border-border">
+				<div class="flex items-center justify-between gap-2">
+					<span
+						class={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass[selectedBooking.status ?? ''] ?? 'bg-slate-100 text-slate-600'}`}
+					>
+						{statusText[selectedBooking.status ?? ''] ?? selectedBooking.status ?? '-'}
+					</span>
+					{#if isPast}
+						<span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs text-muted-foreground font-medium">
+							ช่วงเวลาสิ้นสุดแล้ว
+						</span>
+					{:else}
+						<span class="rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-0.5 text-xs font-medium border border-emerald-500/20">
+							กำลังจะมาถึง
+						</span>
+					{/if}
+				</div>
+				<Dialog.Title class="text-xl font-bold text-foreground">
+					{selectedBooking.title}
+				</Dialog.Title>
+				<Dialog.Description class="text-xs text-muted-foreground">
+					รหัสการจอง: <code class="font-mono text-[11px]">{selectedBooking.id}</code>
+				</Dialog.Description>
+			</Dialog.Header>
+
+			<div class="space-y-4 py-4">
+				<!-- หมายเหตุ ชัดๆ เด่นๆ -->
+				<div class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 shadow-2xs">
+					<div class="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 mb-2">
+						<FileText class="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+						<span class="tracking-wide">หมายเหตุ / สิ่งที่ต้องการเพิ่มเติม</span>
+					</div>
+					{#if selectedBooking.detailLabel}
+						<div class="text-sm font-medium text-foreground whitespace-pre-wrap leading-relaxed bg-background/90 rounded-lg p-3 border border-amber-500/20">
+							{selectedBooking.detailLabel}
+						</div>
+					{:else}
+						<p class="text-xs italic text-muted-foreground py-1">ไม่มีระบุหมายเหตุ</p>
+					{/if}
+				</div>
+
+				<!-- Grid ข้อมูลการจอง -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<DoorOpen class="size-3.5 text-indigo-600" /> ห้องที่จอง
+						</span>
+						<p class="text-sm font-semibold text-foreground">
+							{selectedBooking.roomName}{selectedBooking.location ? ` (${selectedBooking.location})` : ''}
+						</p>
+					</div>
+
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<CalendarDays class="size-3.5 text-indigo-600" /> วันและเวลา
+						</span>
+						<p class="text-xs font-semibold text-foreground leading-snug">
+							{mdt.fullStr}
+						</p>
+					</div>
+
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<User class="size-3.5 text-indigo-600" /> ผู้จอง
+						</span>
+						<p class="text-sm font-semibold text-foreground">{selectedBooking.bookerName || '-'}</p>
+						<p class="text-muted-foreground font-mono text-[11px]">{selectedBooking.bookerEmail || '-'}</p>
+					</div>
+
+					<div class="rounded-lg border border-border bg-muted/20 p-3 space-y-1">
+						<span class="text-muted-foreground font-medium flex items-center gap-1.5">
+							<GraduationCap class="size-3.5 text-indigo-600" /> อาจารย์ที่ปรึกษา
+						</span>
+						<p class="text-sm font-semibold text-foreground">{selectedBooking.advisorName || 'ไม่ระบุ'}{selectedBooking.advisorEmail ? ` (${selectedBooking.advisorEmail})` : ""}</p>
+					</div>
+				</div>
+
+				<!-- Audit Info -->
+				<div class="rounded-lg border border-border/60 bg-muted/10 p-3 text-[11px] text-muted-foreground space-y-1 font-mono">
+					<p>เพิ่มโดย: {selectedBooking.createdBy || '-'}</p>
+					<p>แก้ไขโดย: {selectedBooking.updatedBy || '-'}</p>
+					{#if selectedBooking.approvedBy || selectedBooking.approvedAt}
+						<p>อนุมัติโดย: {selectedBooking.approvedBy || 'ระบบ'}{selectedBooking.approvedAt ? ` · ${displayDate(selectedBooking.approvedAt)}` : ''}</p>
+					{/if}
+				</div>
+			</div>
+
+			<Dialog.Footer class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border">
+				<div>
+					{#if selectedBooking.status !== 'cancelled' && !isPast}
+						<button
+							type="button"
+							class="rounded-lg border border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
+							onclick={() => cancel(selectedBooking.id, false)}
+						>
+							ยกเลิกการจองนี้
+						</button>
+					{:else if isPast}
+						<span class="text-xs text-muted-foreground italic">
+							การจองนี้สิ้นสุดลงแล้ว ไม่สามารถยกเลิกได้
+						</span>
+					{/if}
+				</div>
+				<button
+					type="button"
+					class="rounded-lg border border-border px-4 py-2 text-xs font-medium hover:bg-muted transition-colors cursor-pointer"
+					onclick={() => (detailDialogOpen = false)}
+				>
+					ปิด
+				</button>
+			</Dialog.Footer>
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>

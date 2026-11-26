@@ -113,7 +113,7 @@
 		</div>
 
 		<div class="space-y-2">
-			<h2 class="text-2xl md:text-3xl leading-tight font-bold tracking-tight text-foreground font-['Prompt','Inter',sans-serif]">
+			<h2 class="text-2xl md:text-3xl leading-tight font-bold tracking-tight text-foreground font-['IBM_Plex_Sans_Thai','Inter',sans-serif]">
 				{#if bookingViewState === 'idle'}
 					<span class="text-emerald-600 dark:text-emerald-500 font-bold">ว่าง</span>
 				{:else}
@@ -123,10 +123,12 @@
 
 			{#if bookingViewState !== 'idle'}
 				<div class="flex flex-wrap gap-x-5 gap-y-1 pt-0.5">
-					<div class="text-muted-foreground flex items-center gap-1.5 text-xs md:text-sm font-medium">
-						<Clock class="h-3.5 w-3.5" />
-						<span>{currentBooking.detailLabel}</span>
-					</div>
+					{#if currentBooking.detailLabel && currentBooking.detailLabel !== '-'}
+						<div class="text-muted-foreground flex items-center gap-1.5 text-xs md:text-sm font-medium">
+							<Clock class="h-3.5 w-3.5" />
+							<span>{currentBooking.detailLabel}</span>
+						</div>
+					{/if}
 					<div class="text-muted-foreground flex items-center gap-1.5 text-xs md:text-sm font-medium">
 						<Users class="h-3.5 w-3.5" />
 						<span>{displayBooker}</span>
@@ -137,7 +139,7 @@
 	</Card.Header>
 
 	<Card.Content class="p-0 pt-4 space-y-1.5">
-		<div class="text-muted-foreground flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+		<div class="text-muted-foreground flex items-center justify-between text-[10px] font-bold">
 			<span class="flex items-center gap-1">
 				{#if bookingViewState === 'idle'}
 					<CheckCircle2 class="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500" />
@@ -150,7 +152,7 @@
 		</div>
 		<div class="relative w-full bg-muted dark:bg-background rounded-full h-1.5 overflow-hidden border border-border/40">
 			<div
-				class={cn("h-full rounded-full transition-all duration-300", themeStyles.progressBarColor)}
+				class={cn("h-full rounded-full transition-colors duration-300", themeStyles.progressBarColor)}
 				style="width: {progressPercent}%"
 			></div>
 		</div>

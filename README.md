@@ -43,7 +43,6 @@ You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
-
 ## Audit Log และการบันทึกประวัติ
 
 การกระทำสำคัญของผู้ดูแลระบบ (เช่น การอนุมัติการจอง หรือการยกเลิกการจองห้อง) จะถูกบันทึกเข้าสู่คอลเลกชันรวมศูนย์ **`admin_actions`** ใน PocketBase โดยอัตโนมัติ เพื่อให้สามารถตรวจสอบย้อนหลังได้ว่าใครเป็นผู้ตัดสินใจ
@@ -56,4 +55,3 @@ You can preview the production build with `npm run preview`.
 
 - [นโยบายความเป็นส่วนตัว](https://booking.cskmitl.com/privacy)
 - [ข้อกำหนดการใช้งาน](https://booking.cskmitl.com/terms)
-

@@ -38,7 +38,7 @@
 		<div class="flex items-center gap-3">
 			<label
 				for="room-select"
-				class="text-foreground/70 text-xs font-bold tracking-wider uppercase font-['Prompt',sans-serif]"
+				class="text-foreground/70 text-xs font-bold tracking-wider uppercase font-['IBM_Plex_Sans_Thai',sans-serif]"
 			>
 				เลือกห้อง:
 			</label>
@@ -95,7 +95,7 @@
 				&lt;
 			</Button>
 			<span
-				class="text-xs font-bold min-w-[130px] text-center text-foreground/80 font-['Prompt',sans-serif] uppercase tracking-wider"
+				class="text-xs font-bold min-w-[130px] text-center text-foreground/80 font-['IBM_Plex_Sans_Thai',sans-serif]"
 			>
 				{monthNames[selectedMonth]}
 				{selectedYear + 543}

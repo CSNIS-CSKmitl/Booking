@@ -31,9 +31,12 @@
 	const teachers = $derived(data.teachers ?? []);
 	const user = $derived(page.data.user);
 	const isAdmin = $derived(user?.isAdmin ?? false);
+	const allowCustomBooker = $derived(data.allowCustomBooker ?? isAdmin);
+	const isStudent = $derived(data.isStudent ?? false);
+	const advisorMode = $derived(data.advisorMode ?? "hidden");
 
 	// Instantiate Svelte 5 flow controller
-	const flow = new BookingFlow(() => isAdmin);
+	const flow = new BookingFlow(() => isAdmin, () => advisorMode);
 
 	function getDayOfWeek(dateStr: string): number {
 		if (!dateStr) return 1;
@@ -83,7 +86,7 @@
 </svelte:head>
 
 <div
-	class="bg-background text-foreground min-h-screen w-full font-['Inter','Prompt',sans-serif] antialiased"
+	class="bg-background text-foreground min-h-screen w-full font-['IBM_Plex_Sans_Thai','Inter',sans-serif] antialiased"
 >
 	<Topbar />
 
@@ -140,9 +143,11 @@
 						bind:title={flow.title}
 						bind:notes={flow.notes}
 						bind:advisorName={flow.advisorName}
+						bind:advisorEmail={flow.advisorEmail}
 						bind:customBookerName={flow.customBookerName}
+						isAdmin={allowCustomBooker}
+						{advisorMode}
 						{teachers}
-						{isAdmin}
 					/>
 
 					<!-- Notifications & Validation alerts -->
@@ -212,6 +217,7 @@
 		title={flow.title}
 		notes={flow.notes}
 		advisorName={flow.advisorName}
+		advisorEmail={flow.advisorEmail}
 		isRecurring={flow.isRecurring}
 		recurringUntil={flow.recurringUntil}
 		recurringDaysText={flow.recurringDaysText}

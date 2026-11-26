@@ -115,7 +115,7 @@
 	>
 		{#each daysOfWeek as day}
 			<div
-				class="text-foreground/80 py-4.5 text-center text-sm font-bold tracking-wider font-['Prompt',sans-serif]"
+				class="text-foreground/80 py-4.5 text-center text-sm font-bold tracking-wider font-['IBM_Plex_Sans_Thai',sans-serif]"
 			>
 				{day}
 			</div>
@@ -169,9 +169,12 @@
 					{/if}
 
 					<!-- Small point when there is any booking in cell -->
-					{#if day.bookings.length > 0 && day.isCurrentMonth}
+					{#if day.bookings.length > 0}
 						<span
-							class="h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400"
+							class={cn(
+								"h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400",
+								!day.isCurrentMonth && "opacity-50",
+							)}
 							title="{day.bookings.length} รายการจอง"
 						></span>
 					{/if}
@@ -179,15 +182,18 @@
 
 				<!-- Bookings Schedule List -->
 				<div class="flex flex-1 flex-col gap-1.5 overflow-hidden">
-					{#if day.isCurrentMonth && day.bookings.length > 0}
+					{#if day.bookings.length > 0}
 						{#each day.bookings.slice(0, 3) as booking (booking.id)}
 							<button
 								type="button"
 								onclick={() => openDetails(booking)}
-								class="w-full bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-accent border border-border/50 rounded px-2.5 py-1.5 text-left transition-colors duration-150 cursor-pointer select-none"
+								class={cn(
+									"w-full bg-muted hover:bg-muted/80 dark:bg-muted dark:hover:bg-accent border border-border/50 rounded px-2.5 py-1.5 text-left transition-all duration-150 cursor-pointer select-none",
+									!day.isCurrentMonth && "opacity-65 hover:opacity-100",
+								)}
 							>
 								<p
-									class="truncate text-sm leading-normal text-foreground font-['Prompt',sans-serif]"
+									class="truncate text-sm leading-normal text-foreground font-['IBM_Plex_Sans_Thai',sans-serif]"
 								>
 									{booking.title}
 								</p>
@@ -196,6 +202,13 @@
 								>
 									{booking.time}
 								</p>
+								{#if booking.bookerName}
+									<p
+										class="text-foreground/60 mt-0.5 truncate text-xs leading-tight font-['IBM_Plex_Sans_Thai',sans-serif]"
+									>
+										{booking.bookerName}
+									</p>
+								{/if}
 							</button>
 						{/each}
 						{#if day.bookings.length > 3}
@@ -240,7 +253,7 @@
 				class="px-6 py-4 border-b border-border/85 flex items-center justify-between bg-muted/50"
 			>
 				<h3
-					class="font-bold text-foreground text-sm tracking-wide uppercase font-['Prompt',sans-serif]"
+					class="font-bold text-foreground text-sm tracking-wide uppercase font-['IBM_Plex_Sans_Thai',sans-serif]"
 				>
 					รายละเอียดการจองห้อง
 				</h3>
@@ -254,10 +267,10 @@
 			</div>
 
 			<!-- Modal Body -->
-			<div class="p-6 space-y-4 text-xs font-['Prompt',sans-serif]">
+			<div class="p-6 space-y-4 text-xs font-['IBM_Plex_Sans_Thai',sans-serif]">
 				<div class="space-y-1">
 					<span
-						class="text-[10px] font-bold uppercase tracking-wider text-foreground/55"
+						class="text-[10px] font-bold text-foreground/55"
 						>หัวข้อการประชุม</span
 					>
 					<p class=" text-foreground text-base">
@@ -268,7 +281,7 @@
 				<div class="grid grid-cols-2 gap-4">
 					<div class="space-y-1">
 						<span
-							class="text-[10px] uppercase tracking-wider text-foreground/55"
+							class="text-[10px] text-foreground/55"
 							>เวลาการใช้งาน</span
 						>
 						<p class="text-foreground font-mono font-medium">
@@ -278,7 +291,7 @@
 
 					<div class="space-y-1">
 						<span
-							class="text-[10px] uppercase tracking-wider text-foreground/55"
+							class="text-[10px] text-foreground/55"
 							>สถานที่ / ห้อง</span
 						>
 						<p class="text-foreground font-medium">
@@ -292,7 +305,7 @@
 					class="space-y-1.5 border-t border-border/60 pt-4"
 				>
 					<span
-						class="text-[14px] uppercase tracking-wider text-foreground/55 flex items-center justify-between"
+						class="text-[14px] text-foreground/55 flex items-center justify-between"
 					>
 						<span>ผู้จองห้อง</span>
 						{#if isAdmin && !isEditing}
@@ -354,21 +367,6 @@
 					<div class="space-y-1 border-t border-border/60 pt-4">
 						<span class="text-xs text-muted-foreground">อาจารย์ที่ปรึกษา</span>
 						<p class="break-words font-medium">{selectedBooking.advisorName}</p>
-					</div>
-				{/if}
-				{#if selectedBooking.detailLabel}
-					<div
-						class="space-y-1 border-t border-border/60 pt-4"
-					>
-						<span
-							class="text-[10px] font-bold uppercase tracking-wider text-foreground/55"
-							>รายละเอียดเพิ่มเติม</span
-						>
-						<p
-							class="text-foreground/90 whitespace-pre-wrap font-medium"
-						>
-							{selectedBooking.detailLabel}
-						</p>
 					</div>
 				{/if}
 			</div>

@@ -31,7 +31,7 @@
 </svelte:head>
 
 <div
-	class="flex min-h-[calc(100dvh-5rem)] w-full items-center justify-center bg-background font-['Inter','Prompt',sans-serif] antialiased transition-colors duration-300"
+	class="flex min-h-[calc(100dvh-5rem)] w-full items-center justify-center bg-background font-['IBM_Plex_Sans_Thai','Inter',sans-serif] antialiased transition-colors duration-300"
 >
 	<!-- Simple Clean Card Container -->
 	<div
@@ -43,11 +43,7 @@
 		>
 			<!-- Simple Header -->
 			<div class="flex flex-col items-center space-y-4 text-center">
-				<div
-					class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400"
-				>
-					<CalendarRange class="h-6 w-6" />
-				</div>
+				<img src="/logocs.png" alt="CS KMITL Logo" loading="lazy" decoding="async" class="h-14 w-14 object-contain" />
 
 				<div class="space-y-1">
 					<h1 class="text-2xl font-bold tracking-tight text-foreground">
@@ -85,7 +81,7 @@
 						กำลังเชื่อมต่อ...
 					{:else}
 						<LogIn class="h-4 w-4" />
-						ลงชื่อเข้าใช้งานด้วย KMITL Account
+						Login with Google
 					{/if}
 				</button>
 
@@ -115,5 +111,5 @@
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
 </style>

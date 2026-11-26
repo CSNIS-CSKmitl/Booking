@@ -17,7 +17,7 @@
 >
 	<Card.Header class="p-0 flex flex-row items-center justify-between">
 		<h3
-			class="text-muted-foreground text-xs font-bold tracking-wider uppercase flex items-center gap-1.5 font-['Prompt',sans-serif]"
+			class="text-muted-foreground text-xs font-bold tracking-wider uppercase flex items-center gap-1.5 font-['IBM_Plex_Sans_Thai',sans-serif]"
 		>
 			<CalendarDays class="h-4 w-4 text-muted-foreground" />
 			คิวถัดไปในวันนี้
@@ -43,7 +43,7 @@
 					>
 						<div class="min-w-0 flex-1 space-y-1">
 							<p
-								class="truncate text-sm font-bold text-foreground font-['Prompt',sans-serif] tracking-tight"
+								class="truncate text-sm font-bold text-foreground font-['IBM_Plex_Sans_Thai',sans-serif] tracking-tight"
 							>
 								{booking.title}
 							</p>

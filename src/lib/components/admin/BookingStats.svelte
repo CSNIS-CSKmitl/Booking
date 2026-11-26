@@ -1,4 +1,4 @@
-<script lang="ts">
+﻿<script lang="ts">
 	import {
 		BOOKING_TIME_RANGES,
 		type BookingDrilldownFilter,
@@ -10,6 +10,8 @@
 		stats: Partial<ComputedBookingStats> & {
 			total: number;
 			upcoming: number;
+			ongoing?: number;
+			completed?: number;
 			month: number;
 			bookers: number;
 			cancelled: number;
@@ -79,6 +81,44 @@
 		const next = activeFilter === filter && filter !== 'all' ? 'all' : filter;
 		onDrilldown?.(next);
 	}
+	function exportStatsCsv() {
+		const nowStr = new Date().toLocaleString('th-TH');
+		let csv = '\uFEFF';
+		csv += `รายงานสถิติระบบจองห้อง (Room Booking Statistics)\n`;
+		csv += `ช่วงเวลาที่เลือก: ${rangeLabel}\n`;
+		csv += `ส่งออกข้อมูลเมื่อ: ${nowStr}\n\n`;
+
+		csv += `ภาพรวมสถิติ\n`;
+		csv += `รายการ,ค่า\n`;
+		csv += `การจองทั้งหมด,${totalBookings}\n`;
+		csv += `กำลังใช้งาน,${stats.total || 0}\n`;
+		csv += `กำลังจะมาถึง,${stats.upcoming || 0}\n`;
+		csv += `ยกเลิกแล้ว,${stats.cancelled || 0}\n`;
+		csv += `อัตราการยกเลิก (%),${cancellationRate}%\n`;
+		csv += `ชั่วโมงการใช้งานรวม,${totalHours} ชม.\n`;
+		csv += `ห้องที่มีการจองมากที่สุด,${mostBookedRoom ? mostBookedRoom.name : 'ไม่มี'}\n`;
+		csv += `ช่วงเวลาที่จองหนาแน่นที่สุด,${peakHour ? peakHour.slot : 'ไม่มี'}\n`;
+		csv += `ผู้จองทั้งหมด,${stats.bookers || 0} คน\n\n`;
+
+		if (trend && trend.length > 0) {
+			csv += `แนวโน้มการจองตามช่วงเวลา\n`;
+			csv += `ช่วง,จำนวนครั้ง,จำนวนชั่วโมง\n`;
+			trend.forEach((t) => {
+				csv += `"${t.label}",${t.count || 0},${t.hours || 0}\n`;
+			});
+			csv += '\n';
+		}
+
+		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.setAttribute('download', `booking_stats_${selectedRange}_${new Date().toISOString().slice(0, 10)}.csv`);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <section class="space-y-4" aria-label="สถิติระบบจองห้อง">
@@ -96,7 +136,7 @@
 			>
 				<span
 					class="h-1.5 w-1.5 rounded-full {isRealtime
-						? 'animate-pulse bg-emerald-500'
+						? ' bg-emerald-500'
 						: 'bg-slate-400'}"
 				></span>
 				{isRealtime ? 'Realtime' : 'Snapshot'}
@@ -108,12 +148,21 @@
 
 			<button
 				type="button"
-				class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 disabled:opacity-50"
+				class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 disabled:opacity-50 transition-colors"
 				onclick={() => onRefresh?.()}
 				disabled={loading}
 			>
 				<span class={loading ? ' inline-block animate-spin' : ''}>↻</span>
 				<span>{loading ? 'กำลังรีเฟรช...' : 'รีเฟรช'}</span>
+			</button>
+
+			<button
+				type="button"
+				class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted/60 transition-colors"
+				onclick={exportStatsCsv}
+				title="ส่งออกข้อมูลสถิติเป็นไฟล์ CSV"
+			>
+				<span>Export Stat (CSV)</span>
 			</button>
 		</div>
 
@@ -211,14 +260,14 @@
 
 			<button
 				type="button"
-				class="rounded-xl border p-4 text-left transition hover:shadow-xs {activeFilter === 'active'
-					? 'border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-500/20'
-					: 'border-border bg-card hover:border-emerald-300'}"
-				onclick={() => toggleFilter('active')}
+				class="rounded-xl border p-4 text-left transition hover:shadow-xs {activeFilter === 'completed'
+					? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20'
+					: 'border-border bg-card hover:border-indigo-300'}"
+				onclick={() => toggleFilter('completed')}
 			>
-				<p class="text-xs text-muted-foreground">การจองที่ใช้งาน</p>
-				<p class="mt-2 text-2xl font-bold text-emerald-700">{stats.total.toLocaleString()}</p>
-				<p class="mt-1 text-[11px] text-muted-foreground">ผู้จอง {stats.bookers.toLocaleString()} คน</p>
+				<p class="text-xs text-muted-foreground">สิ้นสุดแล้ว</p>
+				<p class="mt-2 text-2xl font-bold text-indigo-700">{(stats.completed ?? 0).toLocaleString()}</p>
+				<p class="mt-1 text-[11px] text-muted-foreground">คลิกเพื่อดูรายการที่ผ่านพ้นไปแล้ว</p>
 			</button>
 
 			<button
@@ -365,7 +414,7 @@
 								</span>
 								<div class="flex h-28 w-full items-end justify-center rounded-t-md bg-muted/40 px-0.5">
 									<div
-										class="w-full rounded-t-sm transition-all {value > 0
+										class="w-full rounded-t-sm transition-colors {value > 0
 											? 'bg-indigo-600 group-hover:bg-indigo-700'
 											: 'bg-border'}"
 										style="height: {heightPct}%"

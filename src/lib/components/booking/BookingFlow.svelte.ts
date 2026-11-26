@@ -1,254 +1,321 @@
-import { getTodayDate, isValidRoomId, toBangkokIso, formatDisplayTime, checkOverlap, validateForm, getBookingDateInBangkok } from "$lib/utils/booking-helpers";
+import type { AdvisorFieldMode } from "$lib/roles";
+import {
+  getTodayDate,
+  isValidRoomId,
+  toBangkokIso,
+  formatDisplayTime,
+  checkOverlap,
+  validateForm,
+  getBookingDateInBangkok,
+  getRecurringDates,
+} from "$lib/utils/booking-helpers";
 import PocketBase from "pocketbase";
 import type { Room, Booking } from "$lib/types";
 import { toast } from "svelte-sonner";
 
 export class BookingFlow {
-	// Form fields reactive state
-	selectedRoomId = $state<string>("");
-	bookingDate = $state<string>(getTodayDate());
-	startTime = $state<string>("09:00");
-	endTime = $state<string>("10:00");
-	title = $state<string>("");
-	notes = $state<string>("");
-	advisorName = $state<string>("");
-	isRecurring = $state(false);
-	recurringUntil = $state<string>("");
-	recurringDays = $state<number[]>([]);
-	customBookerName = $state("");
-	showConfirm = $state(false);
+  // Form fields reactive state
+  selectedRoomId = $state<string>("");
+  bookingDate = $state<string>(getTodayDate());
+  startTime = $state<string>("09:00");
+  endTime = $state<string>("10:00");
+  title = $state<string>("");
+  notes = $state<string>("");
+  advisorName = $state<string>("");
+  advisorEmail = $state<string>("");
+  isRecurring = $state(false);
+  recurringUntil = $state<string>("");
+  recurringDays = $state<number[]>([]);
+  customBookerName = $state("");
+  showConfirm = $state(false);
 
-	// Operational reactive state
-	rooms = $state<Room[]>([]);
-	loadingRooms = $state(true);
-	existingBookings = $state<Booking[]>([]);
-	loadingBookings = $state(false);
-	submitting = $state(false);
-	submitError = $state<string | null>(null);
-	submitSuccess = $state(false);
-	validationError = $state<string | null>(null);
+  // Operational reactive state
+  rooms = $state<Room[]>([]);
+  loadingRooms = $state(true);
+  existingBookings = $state<Booking[]>([]);
+  loadingBookings = $state(false);
+  submitting = $state(false);
+  submitError = $state<string | null>(null);
+  submitSuccess = $state(false);
+  validationError = $state<string | null>(null);
 
-	isAdminGetter: () => boolean;
+  isAdminGetter: () => boolean;
+  advisorModeGetter?: () => AdvisorFieldMode;
 
-	get isAdmin() {
-		return this.isAdminGetter();
-	}
-	pb: PocketBase | null = null;
+  get isAdmin() {
+    return this.isAdminGetter();
+  }
 
-	THAI_DAYS = [
-		"อาทิตย์",
-		"จันทร์",
-		"อังคาร",
-		"พุธ",
-		"พฤหัสบดี",
-		"ศุกร์",
-		"เสาร์",
-	];
+  get advisorMode(): AdvisorFieldMode {
+    return this.advisorModeGetter ? this.advisorModeGetter() : "hidden";
+  }
 
-	recurringDaysText = $derived(
-		this.recurringDays
-			.map((d) => this.THAI_DAYS[d])
-			.filter(Boolean)
-			.join(", "),
-	);
+  get isStudent() {
+    return this.advisorMode === "strict_select";
+  }
+  pb: PocketBase | null = null;
 
-	constructor(isAdminGetter: () => boolean) {
-		this.isAdminGetter = isAdminGetter;
-	}
+  THAI_DAYS = [
+    "อาทิตย์",
+    "จันทร์",
+    "อังคาร",
+    "พุธ",
+    "พฤหัสบดี",
+    "ศุกร์",
+    "เสาร์",
+  ];
 
-	init(pbInstance: PocketBase) {
-		this.pb = pbInstance;
-		void this.loadRooms();
-	}
+  recurringDaysText = $derived(
+    this.recurringDays
+      .map((d) => this.THAI_DAYS[d])
+      .filter(Boolean)
+      .join(", "),
+  );
 
-	selectRoom(id: string) {
-		this.selectedRoomId = id;
-		this.validationError = null;
-	}
+  constructor(
+    isAdminGetter: () => boolean,
+    advisorModeGetter?: () => AdvisorFieldMode,
+  ) {
+    this.isAdminGetter = isAdminGetter;
+    this.advisorModeGetter = advisorModeGetter;
+  }
 
-	toggleDay(day: number) {
-		if (this.recurringDays.includes(day)) {
-			if (this.recurringDays.length > 1) {
-				this.recurringDays = this.recurringDays.filter((d) => d !== day);
-			} else {
-				toast.error("ต้องเลือกวันจองซ้ำอย่างน้อย 1 วัน");
-			}
-		} else {
-			this.recurringDays = [...this.recurringDays, day].sort();
-		}
-	}
+  init(pbInstance: PocketBase) {
+    this.pb = pbInstance;
+    void this.loadRooms();
+  }
 
-	async loadRooms() {
-		if (!this.pb) return;
-		try {
-			const data = await this.pb
-				.collection("rooms")
-				.getFullList<Room>({ sort: "name" });
-			this.rooms = data;
-		} catch (err) {
-			console.error("Failed to load rooms", err);
-			toast.error("ไม่สามารถโหลดรายการห้องได้", {
-				description: "กรุณาลองรีเฟรชหน้าใหม่อีกครั้ง",
-			});
-		} finally {
-			this.loadingRooms = false;
-		}
-	}
+  selectRoom(id: string) {
+    this.selectedRoomId = id;
+    this.validationError = null;
+  }
 
-	async loadBookingsForSelected() {
-		if (!this.pb || !this.selectedRoomId || !isValidRoomId(this.selectedRoomId)) {
-			this.existingBookings = [];
-			return;
-		}
-		this.loadingBookings = true;
-		try {
-			const safeId = this.selectedRoomId;
-			const data = await this.pb.collection("bookings").getFullList({
-				filter: `field = "${safeId}"`,
-				sort: "start_time",
-			});
-			const allBookings = data as unknown as Booking[];
+  toggleDay(day: number) {
+    if (this.recurringDays.includes(day)) {
+      if (this.recurringDays.length > 1) {
+        this.recurringDays = this.recurringDays.filter((d) => d !== day);
+      } else {
+        toast.error("ต้องเลือกวันจองซ้ำอย่างน้อย 1 วัน");
+      }
+    } else {
+      this.recurringDays = [...this.recurringDays, day].sort();
+    }
+  }
 
-			this.existingBookings = allBookings.filter((b) => {
-				if (b.status === "cancelled") return false;
-				return getBookingDateInBangkok(b.start_time) === this.bookingDate;
-			});
-		} catch (err) {
-			console.error("Failed to load bookings", err);
-			this.existingBookings = [];
-		} finally {
-			this.loadingBookings = false;
-		}
-	}
+  async loadRooms() {
+    if (!this.pb) return;
+    try {
+      const data = await this.pb
+        .collection("rooms")
+        .getFullList<Room>({ sort: "name" });
+      this.rooms = data;
+    } catch (err) {
+      console.error("Failed to load rooms", err);
+      toast.error("ไม่สามารถโหลดรายการห้องได้", {
+        description: "กรุณาลองรีเฟรชหน้าใหม่อีกครั้ง",
+      });
+    } finally {
+      this.loadingRooms = false;
+    }
+  }
 
-	async fetchBookingsForRoomDate(): Promise<Booking[]> {
-		if (!this.pb || !this.selectedRoomId || !isValidRoomId(this.selectedRoomId)) {
-			return [];
-		}
-		const safeId = this.selectedRoomId;
-		const data = await this.pb.collection("bookings").getFullList({
-			filter: `field = "${safeId}"`,
-			sort: "start_time",
-		});
-		const all = data as unknown as Booking[];
-		return all.filter((b) => {
-			if (b.status === "cancelled") return false;
-			return getBookingDateInBangkok(b.start_time) === this.bookingDate;
-		});
-	}
+  async loadBookingsForSelected() {
+    if (
+      !this.pb ||
+      !this.selectedRoomId ||
+      !isValidRoomId(this.selectedRoomId)
+    ) {
+      this.existingBookings = [];
+      return;
+    }
+    this.loadingBookings = true;
+    try {
+      const safeId = this.selectedRoomId;
+      const data = await this.pb.collection("bookings").getFullList({
+        filter: `field = "${safeId}"`,
+        sort: "start_time",
+      });
+      const allBookings = data as unknown as Booking[];
 
-	async handleSubmit(e: Event) {
-		e.preventDefault();
-		this.validationError = null;
-		this.submitError = null;
+      this.existingBookings = allBookings.filter((b) => {
+        if (b.status === "cancelled") return false;
+        return getBookingDateInBangkok(b.start_time) === this.bookingDate;
+      });
+    } catch (err) {
+      console.error("Failed to load bookings", err);
+      this.existingBookings = [];
+    } finally {
+      this.loadingBookings = false;
+    }
+  }
 
-		const err = validateForm({
-			selectedRoomId: this.selectedRoomId,
-			bookingDate: this.bookingDate,
-			startTime: this.startTime,
-			endTime: this.endTime,
-			title: this.title,
-			isRecurring: this.isRecurring,
-			recurringUntil: this.recurringUntil,
-			recurringDays: this.recurringDays,
-		});
-		if (err) {
-			this.validationError = err;
-			toast.error("ระบุข้อมูลไม่ครบถ้วน", { description: err });
-			return;
-		}
+  async fetchAllBookingsForRoom(): Promise<Booking[]> {
+    if (
+      !this.pb ||
+      !this.selectedRoomId ||
+      !isValidRoomId(this.selectedRoomId)
+    ) {
+      return [];
+    }
+    const safeId = this.selectedRoomId;
+    const data = await this.pb.collection("bookings").getFullList({
+      filter: `field = "${safeId}"`,
+      sort: "start_time",
+    });
+    const all = data as unknown as Booking[];
+    return all.filter((b) => b.status !== "cancelled");
+  }
 
-		if (!this.pb || !isValidRoomId(this.selectedRoomId)) {
-			this.submitError = "ระบบไม่พร้อมใช้งาน";
-			toast.error("ระบบไม่พร้อมใช้งาน", { description: "กรุณารีเฟรชหน้าแล้วลองใหม่" });
-			return;
-		}
+  async handleSubmit(e: Event) {
+    e.preventDefault();
+    this.validationError = null;
+    this.submitError = null;
 
-		this.submitting = true;
-		try {
-			const fresh = await this.fetchBookingsForRoomDate();
-			this.existingBookings = fresh;
+    const err = validateForm({
+      selectedRoomId: this.selectedRoomId,
+      bookingDate: this.bookingDate,
+      startTime: this.startTime,
+      endTime: this.endTime,
+      title: this.title,
+      advisorName: this.advisorName,
+      advisorMode: this.advisorMode,
+      isStudent: this.isStudent,
+      isRecurring: this.isRecurring,
+      recurringUntil: this.recurringUntil,
+      recurringDays: this.recurringDays,
+    });
+    if (err) {
+      this.validationError = err;
+      toast.error("ระบุข้อมูลไม่ครบถ้วน", { description: err });
+      return;
+    }
 
-			const conflict = checkOverlap(fresh, this.bookingDate, this.startTime, this.endTime);
-			if (conflict) {
-				const cStart = formatDisplayTime(conflict.start_time);
-				const cEnd = formatDisplayTime(conflict.end_time);
-				this.validationError = `เวลานี้ชนกับการจอง "${conflict.title}" (${cStart}-${cEnd})`;
-				toast.error("ช่วงเวลานี้ถูกจองแล้ว", { description: this.validationError });
-				return;
-			}
+    if (!this.pb || !isValidRoomId(this.selectedRoomId)) {
+      this.submitError = "ระบบไม่พร้อมใช้งาน";
+      toast.error("ระบบไม่พร้อมใช้งาน", {
+        description: "กรุณารีเฟรชหน้าแล้วลองใหม่",
+      });
+      return;
+    }
 
-			this.showConfirm = true;
-		} catch (err: any) {
-			console.error("Validation/Overlap check failed", err);
-			this.submitError = err.message || "เกิดข้อผิดพลาดในการตรวจสอบห้อง";
-			toast.error("ตรวจสอบข้อมูลไม่สำเร็จ", {
-				description: this.submitError ?? "",
-			});
-		} finally {
-			this.submitting = false;
-		}
-	}
+    this.submitting = true;
+    try {
+      const allActive = await this.fetchAllBookingsForRoom();
+      this.existingBookings = allActive.filter(
+        (b) => getBookingDateInBangkok(b.start_time) === this.bookingDate,
+      );
 
-	async executeSubmit() {
-		this.submitting = true;
-		this.validationError = null;
-		this.submitError = null;
-		try {
-			const response = await fetch("/api/bookings", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					roomId: this.selectedRoomId,
-					date: this.bookingDate,
-					startTime: this.startTime,
-					endTime: this.endTime,
-					title: this.title.trim(),
-					notes: this.notes.trim(),
-					advisorName: this.advisorName.trim(),
-					isRecurring: this.isRecurring,
-					recurringUntil: this.recurringUntil,
-					recurringDays: this.recurringDays,
-					customBookerName: this.customBookerName.trim() || undefined,
-				}),
-			});
+      const datesToCheck = this.isRecurring
+        ? getRecurringDates(
+            this.bookingDate,
+            this.recurringUntil,
+            this.recurringDays,
+          )
+        : [this.bookingDate];
 
-			if (!response.ok) {
-				const errorData = await response
-					.json()
-					.catch(() => ({ message: "ส่งคำขอไม่สำเร็จ" }));
-				throw new Error(errorData.message || "เซิร์ฟเวอร์ปฏิเสธการจอง");
-			}
+      if (this.isRecurring && datesToCheck.length === 0) {
+        this.validationError =
+          "ไม่มีวันที่ตรงกับเงื่อนไขการจองซ้ำในช่วงเวลาที่กำหนด";
+        toast.error("ไม่พบวันที่ตรงกับเงื่อนไข", {
+          description: this.validationError,
+        });
+        return;
+      }
 
-			this.submitSuccess = true;
-			this.title = "";
-			this.notes = "";
-			this.advisorName = "";
-			this.isRecurring = false;
-			this.recurringUntil = "";
-			this.customBookerName = "";
-			toast.success("ส่งคำขอจองเรียบร้อย", {
-				description: "รอผู้ดูแลอนุมัติ",
-			});
+      for (const date of datesToCheck) {
+        const dayBookings = allActive.filter(
+          (b) => getBookingDateInBangkok(b.start_time) === date,
+        );
+        const conflict = checkOverlap(
+          dayBookings,
+          date,
+          this.startTime,
+          this.endTime,
+        );
+        if (conflict) {
+          const cStart = formatDisplayTime(conflict.start_time);
+          const cEnd = formatDisplayTime(conflict.end_time);
+          const datePrefix = this.isRecurring ? `วันที่ ${date} ` : "";
+          this.validationError = `${datePrefix}เวลานี้ชนกับการจอง "${conflict.title}" (${cStart}-${cEnd})`;
+          toast.error("ช่วงเวลานี้ถูกจองแล้ว", {
+            description: this.validationError,
+          });
+          return;
+        }
+      }
 
-			this.showConfirm = false;
-			await this.loadBookingsForSelected();
-		} catch (err: any) {
-			console.error("Submit failed", err);
-			this.submitError =
-				err.message || "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
-			toast.error("ส่งคำขอไม่สำเร็จ", { description: this.submitError ?? "" });
-			this.showConfirm = false;
-		} finally {
-			this.submitting = false;
-		}
-	}
+      this.showConfirm = true;
+    } catch (err: any) {
+      console.error("Validation/Overlap check failed", err);
+      this.submitError = err.message || "เกิดข้อผิดพลาดในการตรวจสอบห้อง";
+      toast.error("ตรวจสอบข้อมูลไม่สำเร็จ", {
+        description: this.submitError ?? "",
+      });
+    } finally {
+      this.submitting = false;
+    }
+  }
 
-	getRoomName(id: string): string {
-		return this.rooms.find((r) => r.id === id)?.name ?? "";
-	}
+  async executeSubmit() {
+    this.submitting = true;
+    this.validationError = null;
+    this.submitError = null;
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: this.selectedRoomId,
+          date: this.bookingDate,
+          startTime: this.startTime,
+          endTime: this.endTime,
+          title: this.title.trim(),
+          notes: this.notes.trim(),
+          advisorName: this.advisorName.trim(),
+          advisorEmail: this.advisorEmail.trim(),
+          isRecurring: this.isRecurring,
+          recurringUntil: this.recurringUntil,
+          recurringDays: this.recurringDays,
+          customBookerName: this.customBookerName.trim() || undefined,
+        }),
+      });
 
-	getRoomLocation(id: string): string {
-		return this.rooms.find((r) => r.id === id)?.location ?? "";
-	}
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "ส่งคำขอไม่สำเร็จ" }));
+        throw new Error(errorData.message || "เซิร์ฟเวอร์ปฏิเสธการจอง");
+      }
+
+      this.submitSuccess = true;
+      this.title = "";
+      this.notes = "";
+      this.advisorName = "";
+      this.advisorEmail = "";
+      this.isRecurring = false;
+      this.recurringUntil = "";
+      this.customBookerName = "";
+      toast.success("จองห้องเรียบร้อยแล้ว", {
+        description: "บันทึกการจองและอนุมัติอัตโนมัติเรียบร้อย",
+      });
+
+      this.showConfirm = false;
+      await this.loadBookingsForSelected();
+    } catch (err: any) {
+      console.error("Submit failed", err);
+      this.submitError = err.message || "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      toast.error("ส่งคำขอไม่สำเร็จ", { description: this.submitError ?? "" });
+      this.showConfirm = false;
+    } finally {
+      this.submitting = false;
+    }
+  }
+
+  getRoomName(id: string): string {
+    return this.rooms.find((r) => r.id === id)?.name ?? "";
+  }
+
+  getRoomLocation(id: string): string {
+    return this.rooms.find((r) => r.id === id)?.location ?? "";
+  }
 }

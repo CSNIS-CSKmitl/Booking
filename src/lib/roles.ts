@@ -1,61 +1,193 @@
+import type { UserRole, DisplayRole } from "./types/role";
+
+export type { UserRole, DisplayRole };
+
 export function getUserRoles(record: any): string[] {
-	if (!record) return [];
-	const roles = new Set<string>();
+  if (!record) return [];
+  const roles = new Set<string>();
 
-	if (Array.isArray(record.roles)) {
-		for (const r of record.roles) {
-			if (typeof r === 'string') roles.add(r.toLowerCase().trim());
-		}
-	}
+  if (Array.isArray(record.roles)) {
+    for (const r of record.roles) {
+      if (typeof r === "string" && !isRawRoleId(r))
+        roles.add(r.toLowerCase().trim());
+    }
+  }
 
-	const expanded = record.expand?.user_type;
-	if (Array.isArray(expanded)) {
-		for (const item of expanded) {
-			if (item?.type) roles.add(item.type.toLowerCase().trim());
-			if (item?.id) addIdRole(item.id, roles);
-		}
-	} else if (expanded && typeof expanded === 'object') {
-		if (expanded.type) roles.add(expanded.type.toLowerCase().trim());
-		if (expanded.id) addIdRole(expanded.id, roles);
-	}
+  const expanded = record.expand?.user_type;
+  if (Array.isArray(expanded)) {
+    for (const item of expanded) {
+      if (item?.type && !isRawRoleId(item.type))
+        roles.add(item.type.toLowerCase().trim());
+      if (item?.id) addIdRole(item.id, roles);
+    }
+  } else if (expanded && typeof expanded === "object") {
+    if (expanded.type && !isRawRoleId(expanded.type))
+      roles.add(expanded.type.toLowerCase().trim());
+    if (expanded.id) addIdRole(expanded.id, roles);
+  }
 
-	const ut = record.user_type ?? record.user_type_id;
-	if (Array.isArray(ut)) {
-		for (const item of ut) {
-			if (typeof item === 'string') {
-				roles.add(item.toLowerCase().trim());
-				addIdRole(item, roles);
-			}
-		}
-	} else if (typeof ut === 'string') {
-		roles.add(ut.toLowerCase().trim());
-		addIdRole(ut, roles);
-	}
+  const ut = record.user_type ?? record.user_type_id;
+  if (Array.isArray(ut)) {
+    for (const item of ut) {
+      if (typeof item === "string") {
+        if (!isRawRoleId(item)) roles.add(item.toLowerCase().trim());
+        addIdRole(item, roles);
+      }
+    }
+  } else if (typeof ut === "string") {
+    if (!isRawRoleId(ut)) roles.add(ut.toLowerCase().trim());
+    addIdRole(ut, roles);
+  }
 
-	return Array.from(roles);
+  return Array.from(roles);
+}
+
+function isRawRoleId(str: string): boolean {
+  return typeof str === "string" && /^0{10,}\d+$/.test(str.trim());
 }
 
 function addIdRole(id: string, set: Set<string>) {
-	if (id === '000000000000000') set.add('admin');
-	if (id === '000000000000001') set.add('students');
-	if (id === '000000000000002') { set.add('teachers'); set.add('teacher'); }
-	if (id === '000000000000003') { set.add('guests'); set.add('guest'); }
-	if (id === '000000000000009') { set.add('superadmin'); set.add('super_admin'); }
-	if (id === '000000000000004') { set.add('staff'); set.add('stuff'); }
-	if (id === '000000000000005') set.add('head');
-	if (id === '000000000000006') { set.add('teacher'); set.add('teachers'); }
-	if (id === '000000000000007') { set.add('stuff'); set.add('staff'); }
-	if (id === '000000000000008') { set.add('guest'); set.add('guests'); }
-	if (id === '0000000000000010' || id === '000000000000010') { set.add('super_admin'); set.add('superadmin'); }
+  if (id === "000000000000000") set.add("admin");
+  if (id === "000000000000001") set.add("students");
+  if (id === "000000000000002") {
+    set.add("teachers");
+    set.add("teacher");
+  }
+  if (id === "000000000000003") {
+    set.add("guests");
+    set.add("guest");
+  }
+  if (id === "000000000000009") {
+    set.add("superadmin");
+    set.add("super_admin");
+  }
+  if (id === "000000000000004") {
+    set.add("staff");
+  }
+  if (id === "000000000000005") set.add("head");
+  if (id === "000000000000006") {
+    set.add("teacher");
+    set.add("teachers");
+  }
+  if (id === "000000000000007") {
+    set.add("staff");
+  }
+  if (id === "000000000000008") {
+    set.add("guest");
+    set.add("guests");
+  }
+  if (id === "0000000000000010" || id === "000000000000010") {
+    set.add("super_admin");
+    set.add("superadmin");
+  }
+}
+
+/**
+ * แปลง Role ทางเทคนิคให้เป็นชื่อบทบาทที่อ่านง่ายสำหรับแสดงในอีเมลและหน้าจอ
+ */
+export function formatDisplayRole(userOrRoles: any): DisplayRole {
+  const roleList = Array.isArray(userOrRoles)
+    ? userOrRoles
+    : getUserRoles(userOrRoles);
+  const cleanRoles = roleList.filter((r) => !isRawRoleId(r));
+  if (
+    cleanRoles.some((r) =>
+      ["super_admin", "superadmin", "admin", "staff"].includes(r),
+    )
+  )
+    return "เจ้าหน้าที่ (Staff)";
+  if (cleanRoles.includes("head")) return "หัวหน้าภาควิชา (Head)";
+  if (cleanRoles.some((r) => ["teacher", "teachers"].includes(r)))
+    return "อาจารย์ (Teacher)";
+  if (cleanRoles.includes("staff"))
+    return "เจ้าหน้าที่ (Staff)";
+  if (cleanRoles.some((r) => ["student", "students"].includes(r)))
+    return "นักศึกษา (Student)";
+  if (cleanRoles.some((r) => ["guest", "guests"].includes(r)))
+    return "บุคคลภายนอก (Guest)";
+  return cleanRoles.length > 0 ? cleanRoles[0] : "ผู้ใช้งาน";
 }
 
 /**
  * In Booking: admin access is strictly for super_admin or head (or PB admin email)
  */
 export function isBookingAdmin(user: any, adminEmail?: string): boolean {
-	if (!user) return false;
-	if (adminEmail && user.email === adminEmail) return true;
-	if (user.email === 'log@cskmitl.com') return true;
-	const roles = getUserRoles(user);
-	return roles.includes('head') || roles.includes('superadmin') || roles.includes('super_admin');
+  if (!user) return false;
+  if (adminEmail && user.email === adminEmail) return true;
+  if (user.email === "log@cskmitl.com") return true;
+  const roles = getUserRoles(user);
+  return (
+    roles.includes("head") ||
+    roles.includes("superadmin") ||
+    roles.includes("super_admin")
+  );
+}
+
+/**
+ * ตรวจสอบว่าเป็นนักศึกษาหรือไม่ (ไม่ใช่ อาจารย์, เจ้าหน้าที่, หรือ แอดมิน)
+ */
+export function isStudentRole(user: any): boolean {
+  if (!user) return false;
+  const roles = getUserRoles(user);
+  const isTeacherOrStaffOrAdmin = roles.some((r) =>
+    [
+      "teacher",
+      "teachers",
+      "staff",
+      "head",
+      "super_admin",
+      "superadmin",
+      "admin",
+    ].includes(r),
+  );
+  if (isTeacherOrStaffOrAdmin) return false;
+  return (
+    roles.some((r) => ["student", "students"].includes(r)) ||
+    /^\d{8}@/.test(user.email || "")
+  );
+}
+
+export type AdvisorFieldMode = "strict_select" | "allow_custom" | "hidden";
+
+/**
+ * กำหนดโหมดของฟิลด์อาจารย์ที่ปรึกษาตาม Role:
+ * - 'allow_custom': เจ้าหน้าที่ (Staff) และ แอดมิน (Super Admin) -> ใส่ชื่อเองได้อิสระ ไม่บังคับ
+ * - 'strict_select': นักศึกษา (Student) และ แอดมิน (Role Admin) -> บังคับเลือกจาก Dropdown เท่านั้น ห้ามพิมพ์เอง
+ * - 'hidden': อาจารย์ (Teacher) และ หัวหน้าภาค (Head) -> ซ่อนฟิลด์ ไม่ต้องกรอก
+ */
+export function getAdvisorFieldMode(user: any): AdvisorFieldMode {
+  if (!user) return "hidden";
+  const roles = getUserRoles(user);
+
+  // 1. เจ้าหน้าที่ (Staff) และ แอดมิน (Super Admin) -> ใส่ชื่อเองได้ (ไม่บังคับ)
+  const isSuperAdminOrStaff =
+    user.email === "log@cskmitl.com" ||
+    roles.some((r) =>
+      ["super_admin", "superadmin", "staff"].includes(r),
+    );
+  if (isSuperAdminOrStaff) {
+    return "allow_custom";
+  }
+
+  // 2. นักศึกษา (Student) และ Role Admin -> เหมือนนักเรียน บังคับเลือกจาก Dropdown
+  const isAdminOrStudent =
+    roles.some((r) => ["admin", "student", "students"].includes(r)) ||
+    /^\d{8}@/.test(user.email || "");
+  if (isAdminOrStudent) {
+    return "strict_select";
+  }
+
+  // 3. อาจารย์ (Teacher) หรือ หัวหน้าภาค (Head) หรืออื่นๆ -> ซ่อน
+  return "hidden";
+}
+
+/**
+ * ตรวจสอบสิทธิ์การจองแทนผู้อื่น (กรอกชื่อผู้จองแทนได้):
+ * อนุญาตสำหรับ staff, super_admin, superadmin, head และ admin email
+ */
+export function canBookOnBehalf(user: any, adminEmail?: string): boolean {
+  if (!user) return false;
+  if (isBookingAdmin(user, adminEmail)) return true;
+  const roles = getUserRoles(user);
+  return roles.includes("staff");
 }
