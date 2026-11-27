@@ -1,4 +1,5 @@
 import { isBookingAdmin } from "$lib/roles";
+import { parseBookingTimestamp } from "$lib/utils/dashboard-helpers";
 import { json, error, isHttpError } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import PocketBase from "pocketbase";
@@ -101,6 +102,12 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
       booking.bookerEmail === locals.user.email;
     if (!isAdmin && !isOwner) {
       throw error(403, "ไม่มีสิทธิ์ยกเลิกรายการจองนี้");
+    }
+
+    // 2.5 Disallow cancelling bookings that have already ended (including admins/head)
+    const endEpoch = parseBookingTimestamp(booking.end_time);
+    if (Number.isFinite(endEpoch) && endEpoch < Date.now()) {
+      throw error(400, "ไม่สามารถยกเลิกการจองที่สิ้นสุดลงแล้วได้");
     }
 
     // 3. Update status to 'cancelled' to release slot and retain history

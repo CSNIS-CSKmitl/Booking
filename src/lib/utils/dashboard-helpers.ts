@@ -145,6 +145,8 @@ export function generateMonthGridStructure(
           id: b.id,
           title: b.title || "Untitled",
           time: displayTime,
+          startTime: b.start_time,
+          endTime: b.end_time,
           roomName: roomInfo ? roomInfo.name : "Unknown Room",
           bookerName: b.bookerName ?? "",
           bookerEmail: b.bookerEmail ?? "",

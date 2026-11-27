@@ -1,4 +1,5 @@
 import { isBookingAdmin } from "$lib/roles";
+import { parseBookingTimestamp } from "$lib/utils/dashboard-helpers";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import PocketBase from "pocketbase";
@@ -253,6 +254,13 @@ export const actions: Actions = {
       return fail(400, { message: "รหัสการจองไม่ถูกต้อง" });
     const pb = await adminClient();
     try {
+      const booking = await pb.collection("bookings").getOne(id);
+      const endEpoch = parseBookingTimestamp(booking.end_time);
+      if (Number.isFinite(endEpoch) && endEpoch < Date.now()) {
+        return fail(400, {
+          message: "ไม่สามารถยกเลิกการจองที่สิ้นสุดลงแล้วได้",
+        });
+      }
       await pb
         .collection("bookings")
         .update(id, { status: "cancelled", updated_by: locals.user!.id });

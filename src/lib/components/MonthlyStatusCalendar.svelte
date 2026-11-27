@@ -3,6 +3,7 @@
 	import * as Card from "$lib/components/ui/card";
 	import { Badge } from "$lib/components/ui/badge";
 	import { cn } from "$lib/utils";
+	import { parseBookingTimestamp } from "$lib/utils/dashboard-helpers";
 	import { fade, slide } from "svelte/transition";
 	import { toast } from "svelte-sonner";
 
@@ -10,6 +11,8 @@
 		id: string;
 		title: string;
 		time: string;
+		startTime?: string;
+		endTime?: string;
 		roomName: string;
 		bookerName?: string;
 		bookerEmail?: string;
@@ -42,6 +45,12 @@
 	let editBookerName = $state("");
 	let isSaving = $state(false);
 	let isDeleting = $state(false);
+
+	const isSelectedBookingPast = $derived.by(() => {
+		if (!selectedBooking?.endTime) return false;
+		const endEpoch = parseBookingTimestamp(selectedBooking.endTime);
+		return Number.isFinite(endEpoch) && endEpoch < Date.now();
+	});
 
 	function openDetails(booking: BookingDisplayItem) {
 		selectedBooking = booking;
@@ -77,6 +86,10 @@
 
 	async function handleDeleteBooking() {
 		if (!selectedBooking) return;
+		if (isSelectedBookingPast) {
+			toast.error("การจองนี้สิ้นสุดลงแล้ว ไม่สามารถยกเลิกได้");
+			return;
+		}
 		if (
 			!confirm(
 				`คุณต้องการยกเลิกการจอง "${selectedBooking.title}" ใช่หรือไม่?`,
@@ -376,7 +389,11 @@
 				class="px-6 py-4 border-t border-border/85 bg-muted/50 flex items-center justify-between"
 			>
 				<div>
-					{#if isAdmin || (user && selectedBooking.bookerEmail === user.email)}
+					{#if isSelectedBookingPast}
+						<span class="text-xs text-muted-foreground italic">
+							การจองนี้สิ้นสุดลงแล้ว ไม่สามารถยกเลิกได้
+						</span>
+					{:else if isAdmin || (user && selectedBooking.bookerEmail === user.email)}
 						<button
 							type="button"
 							onclick={handleDeleteBooking}
